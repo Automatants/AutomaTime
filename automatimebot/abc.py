@@ -1,12 +1,14 @@
 from datetime import datetime, timedelta
 from dataclasses import dataclass, field
+from typing import Optional
 
 
 @dataclass
 class Task:
     author: str
     start: datetime
-    comment: str
+    comment: Optional[str] = field(default=None, repr=False)
+    name: Optional[str] = field(default=None)
 
 
 @dataclass

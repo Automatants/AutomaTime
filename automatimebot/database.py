@@ -2,11 +2,12 @@ import sqlite3
 
 from automatimebot import CompleteTask
 
-DATABASE_PATH = "tasks.db"
-TABLE_NAME = "tasks"
+DATABASE_PATH = "automatime.db"
+TABLE_NAME = "sessions"
 
 DATABASE_COLUMNS = {
     "project": {"dtype": "TINYTEXT", "optional": False},
+    "task": {"dtype": "TINYTEXT", "optional": True},
     "username": {"dtype": "TINYTEXT", "optional": False},
     "start": {"dtype": "DATETIME", "optional": False},
     "stop": {"dtype": "DATETIME", "optional": False},
@@ -50,6 +51,7 @@ def add_complete_task(project: str, complete_task: CompleteTask):
             INSERT,
             (
                 project,
+                complete_task.task.name,
                 complete_task.task.author,
                 complete_task.task.start.strftime("%Y-%m-%d %H:%M:%S"),
                 complete_task.stop.strftime("%Y-%m-%d %H:%M:%S"),
