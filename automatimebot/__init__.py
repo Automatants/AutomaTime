@@ -5,7 +5,7 @@ from typing import Dict, TYPE_CHECKING
 if TYPE_CHECKING:
     from telegram import Chat
 
-from automatimebot.abc import Task
+from automatimebot.abc import Task, CompleteTask
 
 # Globals
 START = "Start"

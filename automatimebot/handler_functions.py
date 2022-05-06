@@ -9,6 +9,7 @@ from automatimebot import (
     STOP_CODE,
     ISWORKING,
     Task,
+    CompleteTask,
     workers_in_chats,
     wait_comment,
 )
@@ -22,12 +23,12 @@ def start_msg_format(task: Task):
     return f"{START_CODE} {task.author} {task.comment}"
 
 
-def stop_msg_format(date: datetime, task: Task):
-    time_taken = date - task.start
-    human_timestamp = pretty_time_delta(time_taken.total_seconds())
+def stop_msg_format(complete_task: CompleteTask):
+    task = complete_task.task
+    human_timestamp = pretty_time_delta(complete_task.duration.total_seconds())
     return (
         f"{STOP_CODE} {task.author} stopped working"
-        f" on {task.comment} after {human_timestamp} [{time_taken}]"
+        f" on {task.comment} after {human_timestamp} [{complete_task.duration}]"
     )
 
 
@@ -111,7 +112,8 @@ def handle_stop(update: Update, context: CallbackContext):
     date = update.message.date
     if chat in workers_in_chats and author in workers_in_chats[chat]:
         task = workers_in_chats[chat].pop(author)
-        msg = stop_msg_format(date, task)
+        complete_task = CompleteTask(task, date)
+        msg = stop_msg_format(complete_task)
         context.bot.send_message(chat_id=update.effective_chat.id, text=msg)
         LOGGER.info(f"Update on {chat}: {msg}")
 
