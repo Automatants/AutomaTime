@@ -6,8 +6,8 @@ DATABASE_PATH = "tasks.db"
 TABLE_NAME = "tasks"
 
 INSERT = f"""INSERT INTO {TABLE_NAME}
-             (project, username, duration, comment)
-             VALUES (?,?,?,?);"""
+             (project, username, start, stop, duration, comment)
+             VALUES (?,?,?,?,?,?);"""
 
 SELECT_SUMMARY = f"""SELECT username, SUM(duration)
     FROM {TABLE_NAME}
@@ -25,6 +25,8 @@ def create_database():
         (id INTEGER PRIMARY KEY,
         project        TINYTEXT    NOT NULL,
         username       TINYTEXT    NOT NULL,
+        start          DATETIME    NOT NULL,
+        stop           DATETIME    NOT NULL,
         duration       FLOAT       NOT NULL,
         comment        TEXT);"""
     with connect() as db:
@@ -38,6 +40,8 @@ def add_complete_task(project: str, complete_task: CompleteTask):
             (
                 project,
                 complete_task.task.author,
+                complete_task.task.start.strftime("%Y-%m-%d %H:%M:%S"),
+                complete_task.stop.strftime("%Y-%m-%d %H:%M:%S"),
                 complete_task.duration.total_seconds(),
                 complete_task.task.comment,
             ),
