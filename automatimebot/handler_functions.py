@@ -16,7 +16,7 @@ from automatimebot import (
 )
 from automatimebot.utils import pretty_time_delta
 from automatimebot.logging import get_logger
-from automatimebot.database import add_complete_task, get_all_tasks
+from automatimebot.database import add_complete_task, get_summary
 
 LOGGER = get_logger(__name__)
 
@@ -159,8 +159,11 @@ def handle_is_working(update: Update, context: CallbackContext):
 
 def handle_summary(update: Update, context: CallbackContext):
     chat = get_chat_name(update.effective_chat)
-    tasks_complete = get_all_tasks(chat)
-    context.bot.send_message(chat_id=update.effective_chat.id, text=f"{tasks_complete}")
+    summary = get_summary(chat)
+    msg = "Summary of time spent:\n" + "\n".join(
+        [f"{user}: {pretty_time_delta(duration)}" for user, duration in summary.items()]
+    )
+    context.bot.send_message(chat_id=update.effective_chat.id, text=msg)
 
 
 def unknown(update: Update, context: CallbackContext):
