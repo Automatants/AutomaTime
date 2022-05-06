@@ -5,7 +5,7 @@ from colorama import Fore, Style
 
 
 def init_logger(log_level: int, package_name: str):
-    logging.basicConfig(level=logging.INFO, filename=f"{package_name}.log")
+    logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(package_name)
     logger.setLevel(log_level)
 

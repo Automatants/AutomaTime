@@ -8,6 +8,7 @@ from automatimebot import (
     STOP,
     STOP_CODE,
     ISWORKING,
+    SUMMARY,
     Task,
     CompleteTask,
     workers_in_chats,
@@ -15,6 +16,7 @@ from automatimebot import (
 )
 from automatimebot.utils import pretty_time_delta
 from automatimebot.logging import get_logger
+from automatimebot.database import add_complete_task, get_all_tasks
 
 LOGGER = get_logger(__name__)
 
@@ -44,6 +46,7 @@ def menu(update: Update, context: CallbackContext):
         [KeyboardButton(START)],
         [KeyboardButton(STOP)],
         [KeyboardButton(ISWORKING)],
+        [KeyboardButton(SUMMARY)],
     ]
     author = f"@{update.effective_user.username}"
     context.bot.send_message(
@@ -62,6 +65,8 @@ def messageHandler(update: Update, context: CallbackContext):
         return handle_stop(update, context)
     elif text.startswith(START):
         return handle_start(update, context)
+    elif text.startswith(SUMMARY):
+        return handle_summary(update, context)
     elif wait_comment is not None and author == wait_comment:
         return send_task_start(update, context, text)
 
@@ -113,6 +118,7 @@ def handle_stop(update: Update, context: CallbackContext):
     if chat in workers_in_chats and author in workers_in_chats[chat]:
         task = workers_in_chats[chat].pop(author)
         complete_task = CompleteTask(task, date)
+        add_complete_task(chat, complete_task)
         msg = stop_msg_format(complete_task)
         context.bot.send_message(chat_id=update.effective_chat.id, text=msg)
         LOGGER.info(f"Update on {chat}: {msg}")
@@ -149,6 +155,12 @@ def handle_is_working(update: Update, context: CallbackContext):
             chat_id=update.effective_chat.id,
             text="No one ever worked here since I'm alive.",
         )
+
+
+def handle_summary(update: Update, context: CallbackContext):
+    chat = get_chat_name(update.effective_chat)
+    tasks_complete = get_all_tasks(chat)
+    context.bot.send_message(chat_id=update.effective_chat.id, text=f"{tasks_complete}")
 
 
 def unknown(update: Update, context: CallbackContext):

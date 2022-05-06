@@ -13,6 +13,7 @@ START_CODE = "#START"
 STOP = "Stop"
 STOP_CODE = "#STOP"
 ISWORKING = "Who is working ?"
+SUMMARY = "Summary"
 
 workers_in_chats: Dict["Chat", Dict[str, "Task"]] = {}
 wait_comment: str = None
