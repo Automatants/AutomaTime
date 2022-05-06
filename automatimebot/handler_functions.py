@@ -26,7 +26,7 @@ def stop_msg_format(date: datetime, task: Task):
     time_taken = date - task.start
     human_timestamp = pretty_time_delta(time_taken.total_seconds())
     return (
-        f"{STOP_CODE} {task.author} stoped working"
+        f"{STOP_CODE} {task.author} stopped working"
         f" on {task.comment} after {human_timestamp} [{time_taken}]"
     )
 
