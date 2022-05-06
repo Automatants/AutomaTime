@@ -64,10 +64,10 @@ def add_complete_task(project: str, complete_task: CompleteTask):
         )
 
 
-def get_summary(project: str):
+def get_summary(project: str) -> pd.DataFrame:
     with connect() as db:
         summary_list = db.execute(SELECT_SUMMARY, (project,)).fetchall()
-    return {username: total_duration for username, total_duration in summary_list}
+    return pd.DataFrame(data=summary_list, columns=("username", "duration"))
 
 
 def get_all() -> pd.DataFrame:

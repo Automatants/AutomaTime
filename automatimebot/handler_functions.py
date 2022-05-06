@@ -161,7 +161,7 @@ def handle_summary(update: Update, context: CallbackContext):
     chat = get_chat_name(update.effective_chat)
     summary = get_summary(chat)
     msg = "Summary of time spent:\n" + "\n".join(
-        [f"{user}: {pretty_time_delta(duration)}" for user, duration in summary.items()]
+        [f"{user}: {pretty_time_delta(duration)}" for user, duration in summary.values]
     )
     context.bot.send_message(chat_id=update.effective_chat.id, text=msg)
 
