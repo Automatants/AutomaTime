@@ -14,6 +14,7 @@ STOP = "Stop"
 STOP_CODE = "#STOP"
 ISWORKING = "Who is working ?"
 SUMMARY = "Summary"
+LOAD_TASKS = "Upload tasks"
 
 workers_in_chats: Dict["Chat", Dict[str, "Task"]] = {}
 wait_comment: str = None

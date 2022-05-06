@@ -1,7 +1,13 @@
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram.ext import (
+    Updater,
+    CommandHandler,
+    MessageHandler,
+    Filters,
+    CallbackQueryHandler,
+)
 import logging
 
-from automatimebot.handler_functions import menu, messageHandler, unknown
+from automatimebot.handler_functions import menu, messageHandler, queryHandler, unknown
 from automatimebot.logging import init_logger
 from automatimebot.database import create_database
 
@@ -14,6 +20,7 @@ if __name__ == "__main__":
 
     dispatcher.add_handler(CommandHandler("automatime", menu))
     dispatcher.add_handler(MessageHandler(Filters.text, messageHandler))
+    dispatcher.add_handler(CallbackQueryHandler(queryHandler))
     dispatcher.add_handler(MessageHandler(Filters.command, unknown))
 
     updater.start_polling()
