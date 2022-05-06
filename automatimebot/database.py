@@ -1,4 +1,5 @@
 import sqlite3
+import pandas as pd
 
 from automatimebot import CompleteTask
 
@@ -24,6 +25,8 @@ SELECT_SUMMARY = f"""SELECT username, SUM(duration)
     WHERE project = ?
     GROUP BY username
     ORDER BY SUM(duration) DESC;"""
+
+SELECT_ALL = f"SELECT * FROM {TABLE_NAME}"
 
 
 def connect() -> sqlite3.Connection:
@@ -65,3 +68,14 @@ def get_summary(project: str):
     with connect() as db:
         summary_list = db.execute(SELECT_SUMMARY, (project,)).fetchall()
     return {username: total_duration for username, total_duration in summary_list}
+
+
+def get_all() -> pd.DataFrame:
+    with connect() as db:
+        all_row = db.execute(SELECT_ALL).fetchall()
+    columns = ["id"] + list(DATABASE_COLUMNS.keys())
+    return pd.DataFrame(data=all_row, columns=columns)
+
+
+if __name__ == "__main__":
+    print(get_all())
