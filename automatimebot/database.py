@@ -5,9 +5,18 @@ from automatimebot import CompleteTask
 DATABASE_PATH = "tasks.db"
 TABLE_NAME = "tasks"
 
+DATABASE_COLUMNS = {
+    "project": {"dtype": "TINYTEXT", "optional": False},
+    "username": {"dtype": "TINYTEXT", "optional": False},
+    "start": {"dtype": "DATETIME", "optional": False},
+    "stop": {"dtype": "DATETIME", "optional": False},
+    "duration": {"dtype": "FLOAT", "optional": False},
+    "comment": {"dtype": "TEXT", "optional": True},
+}
+
 INSERT = f"""INSERT INTO {TABLE_NAME}
-             (project, username, start, stop, duration, comment)
-             VALUES (?,?,?,?,?,?);"""
+             ({', '.join(DATABASE_COLUMNS.keys())})
+             VALUES ({','.join('?'*len(DATABASE_COLUMNS))});"""
 
 SELECT_SUMMARY = f"""SELECT username, SUM(duration)
     FROM {TABLE_NAME}
@@ -20,15 +29,17 @@ def connect() -> sqlite3.Connection:
     return sqlite3.connect(DATABASE_PATH)
 
 
+def get_columns_desc():
+    desc_elements = []
+    for column_name, column_data in DATABASE_COLUMNS.items():
+        null_str = "" if column_data["optional"] else " NOT_NULL"
+        desc_elements.append(f"{column_name} {column_data['dtype']}{null_str}")
+    return ", ".join(desc_elements)
+
+
 def create_database():
     create_req = f"""CREATE TABLE IF NOT EXISTS {TABLE_NAME}
-        (id INTEGER PRIMARY KEY,
-        project        TINYTEXT    NOT NULL,
-        username       TINYTEXT    NOT NULL,
-        start          DATETIME    NOT NULL,
-        stop           DATETIME    NOT NULL,
-        duration       FLOAT       NOT NULL,
-        comment        TEXT);"""
+        (id INTEGER PRIMARY KEY, {get_columns_desc()});"""
     with connect() as db:
         db.execute(create_req)
 
