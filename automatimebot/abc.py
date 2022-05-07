@@ -4,7 +4,7 @@ from typing import Optional
 
 
 @dataclass
-class Task:
+class Session:
     author: str
     start: datetime
     comment: Optional[str] = field(default=None, repr=False)
@@ -12,8 +12,8 @@ class Task:
 
 
 @dataclass
-class CompleteTask:
-    task: Task
+class CompleteSession:
+    task: Session
     stop: datetime
     duration: timedelta = field(init=False)
 

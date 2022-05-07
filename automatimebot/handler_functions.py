@@ -9,8 +9,8 @@ from automatimebot import (
     ISWORKING,
     SUMMARY,
     LOAD_TASKS,
-    Task,
-    CompleteTask,
+    Session,
+    CompleteSession,
     workers_in_chats,
     wait_comment,
     wait_tasks,
@@ -23,16 +23,16 @@ from automatimebot.tasks import read_tasks
 LOGGER = get_logger(__name__)
 
 
-def start_msg_format(task: Task):
-    return f"{START_CODE} {task.author} {task.comment}"
+def start_msg_format(session: Session):
+    return f"{START_CODE} {session.author} {session.comment}"
 
 
-def stop_msg_format(complete_task: CompleteTask):
-    task = complete_task.task
-    human_timestamp = pretty_time_delta(complete_task.duration.total_seconds())
+def stop_msg_format(complete_session: CompleteSession):
+    session = complete_session.task
+    human_timestamp = pretty_time_delta(complete_session.duration.total_seconds())
     return (
-        f"{STOP_CODE} {task.author} stopped working"
-        f" on {task.comment} after {human_timestamp} [{complete_task.duration}]"
+        f"{STOP_CODE} {session.author} stopped working"
+        f" on {session.comment} after {human_timestamp} [{complete_session.duration}]"
     )
 
 
@@ -128,14 +128,15 @@ def send_start(
     chat = get_chat_name(update.effective_chat)
     date = update.message.date
 
-    new_task = Task(author, date, comment)
-    workers_in_chats[chat][author] = new_task
-    msg = start_msg_format(new_task)
+    session = Session(author, date, comment)
+    workers_in_chats[chat][author] = session
 
-    LOGGER.info(f"Update on {chat}: {msg}")
     context.bot.delete_message(update.effective_chat.id, update.message.message_id)
+
+    msg = start_msg_format(session)
     context.bot.send_message(update.effective_chat.id, msg)
     wait_comment = None
+    LOGGER.info(f"Update on {chat}: {msg}")
 
 
 def handle_stop(update: Update, context: CallbackContext):
@@ -144,10 +145,10 @@ def handle_stop(update: Update, context: CallbackContext):
     chat = get_chat_name(update.effective_chat)
     date = update.callback_query.message.date
     if chat in workers_in_chats and author in workers_in_chats[chat]:
-        task = workers_in_chats[chat].pop(author)
-        complete_task = CompleteTask(task, date)
-        add_complete_session(chat, complete_task)
-        msg = stop_msg_format(complete_task)
+        session = workers_in_chats[chat].pop(author)
+        complete_session = CompleteSession(session, date)
+        add_complete_session(chat, complete_session)
+        msg = stop_msg_format(complete_session)
         context.bot.send_message(chat_id=update.effective_chat.id, text=msg)
         LOGGER.info(f"Update on {chat}: {msg}")
 
@@ -163,9 +164,9 @@ def handle_is_working(update: Update, context: CallbackContext):
         workers_in_chat = workers_in_chats[chat]
         if workers_in_chat:
             workers_infos = [
-                f"{worker} since {pretty_time_delta((date - task.start).total_seconds())}"
-                f" on {task.comment}"
-                for worker, task in workers_in_chat.items()
+                f"{worker} since {pretty_time_delta((date - session.start).total_seconds())}"
+                f" on {session.comment}"
+                for worker, session in workers_in_chat.items()
             ]
             workers_str = "\n".join(workers_infos)
             context.bot.send_message(

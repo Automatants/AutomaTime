@@ -5,7 +5,7 @@ from typing import Dict, TYPE_CHECKING
 if TYPE_CHECKING:
     from telegram import Chat
 
-from automatimebot.abc import Task, CompleteTask
+from automatimebot.abc import Session, CompleteSession
 
 # Globals
 START = "Start"
@@ -16,6 +16,6 @@ ISWORKING = "Who is working ?"
 SUMMARY = "Summary"
 LOAD_TASKS = "Upload tasks"
 
-workers_in_chats: Dict["Chat", Dict[str, "Task"]] = {}
+workers_in_chats: Dict["Chat", Dict[str, "Session"]] = {}
 wait_comment: str = None
 wait_tasks: str = None

@@ -2,7 +2,7 @@ import sqlite3
 from typing import List, Tuple
 import pandas as pd
 
-from automatimebot import CompleteTask
+from automatimebot import CompleteSession
 
 DATABASE_PATH = "automatime.db"
 
@@ -69,7 +69,7 @@ def create_database():
             db.execute(create_req)
 
 
-def add_complete_session(project: str, complete_task: CompleteTask):
+def add_complete_session(project: str, complete_task: CompleteSession):
     with connect() as db:
         db.execute(
             insert_req("sessions"),
