@@ -291,7 +291,12 @@ def handle_summary(update: Update, context: CallbackContext):
 def store_task(update: Update, context: CallbackContext):
     chat = get_chat_name(update.effective_chat)
     tasks, _ = read_tasks(update.message.text)
+    author = get_user_name(update.effective_user)
     add_tasks(chat, tasks, update.message.text)
+    context.bot.delete_message(update.effective_chat.id, update.message.message_id)
+    context.bot.send_message(
+        update.effective_chat.id, f"{author} has updated project tasks."
+    )
     LOGGER.info(f"Tasks uploaded on {chat}: {[task for task, _ in tasks]}")
 
 
