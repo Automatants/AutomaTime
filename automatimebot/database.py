@@ -42,11 +42,12 @@ SELECT_SUMMARY = f"""SELECT username, SUM(duration)
 
 SELECT_PROJECTS_WITH_TASKS = """SELECT project
     FROM projects
-    WHERE tasks_dict IS NOT NULL
-    """
+    WHERE tasks_dict IS NOT NULL;"""
 
-DELETE_TASKS_FROM_PROJECT = "DELETE FROM tasks WHERE project = ?"
-DELETE_PROJECT = "DELETE FROM projects WHERE project = ?"
+SELECT_TASKS_DICT = """SELECT tasks_dict FROM projects WHERE project = ?;"""
+
+DELETE_TASKS_FROM_PROJECT = "DELETE FROM tasks WHERE project = ?;"
+DELETE_PROJECT = "DELETE FROM projects WHERE project = ?;"
 
 
 def connect() -> sqlite3.Connection:
@@ -75,12 +76,12 @@ def add_complete_session(project: str, complete_task: CompleteSession):
             insert_req("sessions"),
             (
                 project,
-                complete_task.task.name,
-                complete_task.task.author,
-                complete_task.task.start.strftime("%Y-%m-%d %H:%M:%S"),
+                complete_task.session.task,
+                complete_task.session.author,
+                complete_task.session.start.strftime("%Y-%m-%d %H:%M:%S"),
                 complete_task.stop.strftime("%Y-%m-%d %H:%M:%S"),
                 complete_task.duration.total_seconds(),
-                complete_task.task.comment,
+                complete_task.session.comment,
             ),
         )
 
@@ -98,6 +99,11 @@ def get_summary(project: str) -> pd.DataFrame:
     with connect() as db:
         summary_list = db.execute(SELECT_SUMMARY, (project,)).fetchall()
     return pd.DataFrame(data=summary_list, columns=("username", "duration"))
+
+
+def get_project_tasks_dict(project: str) -> dict:
+    with connect() as db:
+        return db.execute(SELECT_TASKS_DICT, (project,)).fetchall()
 
 
 def get_all(table) -> pd.DataFrame:

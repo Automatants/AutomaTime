@@ -1,3 +1,4 @@
+from typing import List
 from telegram import Chat, InlineKeyboardButton, InlineKeyboardMarkup, Update, User
 from telegram.ext import CallbackContext
 
@@ -12,27 +13,44 @@ from automatimebot import (
     Session,
     CompleteSession,
     workers_in_chats,
+    current_tasks_dict,
     wait_comment,
     wait_tasks,
 )
 from automatimebot.utils import pretty_time_delta
 from automatimebot.logging import get_logger
-from automatimebot.database import add_complete_session, get_summary, add_tasks
+from automatimebot.database import (
+    add_complete_session,
+    get_project_tasks_dict,
+    get_summary,
+    add_tasks,
+)
 from automatimebot.tasks import read_tasks
 
 LOGGER = get_logger(__name__)
 
 
+def task_comment_txt(session: Session):
+    task_txt = ""
+    if session.task and session.comment:
+        task_txt = f" on {session.task} ({session.comment})"
+    elif session.task is not None:
+        task_txt = f" on {session.task}"
+    elif session.comment is not None:
+        task_txt = f" on {session.comment}"
+    return task_txt
+
+
 def start_msg_format(session: Session):
-    return f"{START_CODE} {session.author} {session.comment}"
+    return f"{START_CODE} {session.author} started working{task_comment_txt(session)}"
 
 
 def stop_msg_format(complete_session: CompleteSession):
-    session = complete_session.task
+    session = complete_session.session
     human_timestamp = pretty_time_delta(complete_session.duration.total_seconds())
     return (
         f"{STOP_CODE} {session.author} stopped working"
-        f" on {session.comment} after {human_timestamp} [{complete_session.duration}]"
+        f"{task_comment_txt(session)} after {human_timestamp} [{complete_session.duration}]"
     )
 
 
@@ -92,12 +110,18 @@ def messageHandler(update: Update, context: CallbackContext):
 
 def queryHandler(update: Update, context: CallbackContext):
     text: str = update.callback_query.data
+
+    if isinstance(current_tasks_dict, dict):
+        handle_current_tasks_dict(update, context)
+        return
+
     if text == ISWORKING:
         handle_is_working(update, context)
     elif text.startswith(STOP):
         handle_stop(update, context)
     elif text.startswith(START):
-        handle_start(update, context)
+        if not handle_start(update, context):
+            return
     elif text.startswith(SUMMARY):
         handle_summary(update, context)
     elif text.startswith(LOAD_TASKS):
@@ -107,14 +131,52 @@ def queryHandler(update: Update, context: CallbackContext):
 
 def handle_start(update: Update, context: CallbackContext):
     global workers_in_chats
-    global wait_comment
-    author = get_user_name(update.effective_user)
+    global current_tasks_dict
     chat = get_chat_name(update.effective_chat)
     call = update.callback_query
+
     if chat not in workers_in_chats:
         workers_in_chats[chat] = {}
+
+    tasks_text = get_project_tasks_dict(chat)
+    if tasks_text:
+        _, tasks_dict = read_tasks(tasks_text[0][0])
+        current_tasks_dict = tasks_dict
+        edit_reply_markup(update, context, list(current_tasks_dict.keys()))
+        call.answer()
+        return False
+    else:
+        ask_comment(update, context)
+        return True
+
+
+def ask_comment(update: Update, context: CallbackContext):
+    global wait_comment
+    author = get_user_name(update.effective_user)
+    call = update.callback_query
     call.answer(text=f"Please {author} comment what you will work on.")
+    update.callback_query.delete_message()
     wait_comment = author
+
+
+def handle_current_tasks_dict(update: Update, context: CallbackContext):
+    global current_tasks_dict
+    call = update.callback_query
+    current_tasks_dict = current_tasks_dict[call.data]
+    if isinstance(current_tasks_dict, dict):
+        edit_reply_markup(update, context, list(current_tasks_dict.keys()))
+        call.answer()
+    else:
+        current_tasks_dict = call.data
+        ask_comment(update, context)
+
+
+def edit_reply_markup(update: Update, context: CallbackContext, new_options: List[str]):
+    call = update.callback_query
+    call.edit_message_text("Choose a task:")
+
+    buttons = [[InlineKeyboardButton(key, callback_data=key)] for key in new_options]
+    call.edit_message_reply_markup(InlineKeyboardMarkup(buttons))
 
 
 def send_start(
@@ -124,11 +186,14 @@ def send_start(
 ):
     global workers_in_chats
     global wait_comment
+    global current_tasks_dict
+
     author = get_user_name(update.effective_user)
     chat = get_chat_name(update.effective_chat)
     date = update.message.date
 
-    session = Session(author, date, comment)
+    task = current_tasks_dict if isinstance(current_tasks_dict, str) else None
+    session = Session(author, date, comment, task)
     workers_in_chats[chat][author] = session
 
     context.bot.delete_message(update.effective_chat.id, update.message.message_id)
@@ -136,6 +201,7 @@ def send_start(
     msg = start_msg_format(session)
     context.bot.send_message(update.effective_chat.id, msg)
     wait_comment = None
+    current_tasks_dict = None
     LOGGER.info(f"Update on {chat}: {msg}")
 
 

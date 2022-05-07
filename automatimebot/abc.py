@@ -8,14 +8,14 @@ class Session:
     author: str
     start: datetime
     comment: Optional[str] = field(default=None, repr=False)
-    name: Optional[str] = field(default=None)
+    task: Optional[str] = field(default=None)
 
 
 @dataclass
 class CompleteSession:
-    task: Session
+    session: Session
     stop: datetime
     duration: timedelta = field(init=False)
 
     def __post_init__(self):
-        self.duration = self.stop - self.task.start
+        self.duration = self.stop - self.session.start
