@@ -162,7 +162,13 @@ def ask_comment(update: Update, context: CallbackContext):
 def handle_current_tasks_dict(update: Update, context: CallbackContext):
     global current_tasks_dict
     call = update.callback_query
-    current_tasks_dict = current_tasks_dict[call.data]
+    try:
+        current_tasks_dict = current_tasks_dict[call.data]
+    except KeyError:
+        for key in current_tasks_dict:
+            if key.startswith(call.data):
+                current_tasks_dict = current_tasks_dict[key]
+
     if isinstance(current_tasks_dict, dict):
         edit_reply_markup(update, context, list(current_tasks_dict.keys()))
         call.answer()
@@ -175,7 +181,15 @@ def edit_reply_markup(update: Update, context: CallbackContext, new_options: Lis
     call = update.callback_query
     call.edit_message_text("Choose a task:")
 
-    buttons = [[InlineKeyboardButton(key, callback_data=key)] for key in new_options]
+    def ensure_small(key: str):
+        while len(key.encode("utf-8")) > 63:
+            key = key[:-1]
+        return key
+
+    buttons = [
+        [InlineKeyboardButton(key, callback_data=ensure_small(key))]
+        for key in new_options
+    ]
     call.edit_message_reply_markup(InlineKeyboardMarkup(buttons))
 
 
