@@ -1,4 +1,5 @@
 import sqlite3
+from typing import List, Tuple
 import pandas as pd
 
 from automatimebot import CompleteTask
@@ -27,10 +28,10 @@ TABLES = {
 }
 
 
-def insert_req(table: str, columns: dict):
+def insert_req(table: str):
     return f"""INSERT INTO {table}
-            ({', '.join(columns.keys())})
-            VALUES ({','.join('?'*len(columns))});"""
+            ({', '.join(TABLES[table].keys())})
+            VALUES ({','.join('?'*len(TABLES[table]))});"""
 
 
 SELECT_SUMMARY = f"""SELECT username, SUM(duration)
@@ -38,6 +39,14 @@ SELECT_SUMMARY = f"""SELECT username, SUM(duration)
     WHERE project = ?
     GROUP BY username
     ORDER BY SUM(duration) DESC;"""
+
+SELECT_PROJECTS_WITH_TASKS = """SELECT project
+    FROM projects
+    WHERE tasks_dict IS NOT NULL
+    """
+
+DELETE_TASKS_FROM_PROJECT = "DELETE FROM tasks WHERE project = ?"
+DELETE_PROJECT = "DELETE FROM projects WHERE project = ?"
 
 
 def connect() -> sqlite3.Connection:
@@ -60,10 +69,10 @@ def create_database():
             db.execute(create_req)
 
 
-def add_complete_task(project: str, complete_task: CompleteTask):
+def add_complete_session(project: str, complete_task: CompleteTask):
     with connect() as db:
         db.execute(
-            insert_req("sessions", TABLES["sessions"]),
+            insert_req("sessions"),
             (
                 project,
                 complete_task.task.name,
@@ -74,6 +83,15 @@ def add_complete_task(project: str, complete_task: CompleteTask):
                 complete_task.task.comment,
             ),
         )
+
+
+def add_tasks(project: str, tasks: List[Tuple[str, float]], tasks_dict: dict):
+    with connect() as db:
+        db.execute(DELETE_TASKS_FROM_PROJECT, (project,))
+        db.execute(DELETE_PROJECT, (project,))
+        db.execute(insert_req("projects"), (project, str(tasks_dict)))
+        for task_name, workload in tasks:
+            db.execute(insert_req("tasks"), (task_name, project, workload))
 
 
 def get_summary(project: str) -> pd.DataFrame:

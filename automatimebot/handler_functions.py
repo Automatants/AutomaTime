@@ -17,8 +17,8 @@ from automatimebot import (
 )
 from automatimebot.utils import pretty_time_delta
 from automatimebot.logging import get_logger
-from automatimebot.database import add_complete_task, get_summary
-from automatimebot.tasks import read_tasks, print_tasks
+from automatimebot.database import add_complete_session, get_summary, add_tasks
+from automatimebot.tasks import read_tasks
 
 LOGGER = get_logger(__name__)
 
@@ -146,7 +146,7 @@ def handle_stop(update: Update, context: CallbackContext):
     if chat in workers_in_chats and author in workers_in_chats[chat]:
         task = workers_in_chats[chat].pop(author)
         complete_task = CompleteTask(task, date)
-        add_complete_task(chat, complete_task)
+        add_complete_session(chat, complete_task)
         msg = stop_msg_format(complete_task)
         context.bot.send_message(chat_id=update.effective_chat.id, text=msg)
         LOGGER.info(f"Update on {chat}: {msg}")
@@ -192,7 +192,10 @@ def handle_summary(update: Update, context: CallbackContext):
 
 
 def store_task(update: Update, context: CallbackContext):
-    tasks, tasks_dicts = read_tasks(update.message.text)
+    chat = get_chat_name(update.effective_chat)
+    tasks, _ = read_tasks(update.message.text)
+    add_tasks(chat, tasks, update.message.text)
+    LOGGER.info(f"Tasks uploaded on {chat}: {[task for task, _ in tasks]}")
 
 
 def handle_load_task(update: Update, context: CallbackContext):
