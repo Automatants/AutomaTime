@@ -1,5 +1,5 @@
 from typing import List
-from telegram import Chat, InlineKeyboardButton, InlineKeyboardMarkup, Update, User
+from telegram import Bot, Chat, InlineKeyboardButton, InlineKeyboardMarkup, Update, User
 from telegram.ext import CallbackContext
 
 from automatimebot import (
@@ -88,13 +88,25 @@ def menu(update: Update, context: CallbackContext):
         ],
         [InlineKeyboardButton(LOAD_TASKS, callback_data=LOAD_TASKS)],
     ]
+    if not try_delete_message(
+        context.bot, update.effective_chat.id, update.message.message_id
+    ):
+        return
 
     context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=f"What do you want to do {get_user_name(user)}?",
         reply_markup=InlineKeyboardMarkup(buttons),
     )
-    context.bot.delete_message(update.effective_chat.id, update.message.message_id)
+
+
+def try_delete_message(bot: Bot, chat_id, message_id) -> bool:
+    if bot.getChatMember(chat_id, bot.bot.id).can_delete_messages:
+        bot.delete_message(chat_id, message_id)
+        return True
+    else:
+        bot.send_message(chat_id, "Please allow me to delete messages!")
+        return False
 
 
 def messageHandler(update: Update, context: CallbackContext):
