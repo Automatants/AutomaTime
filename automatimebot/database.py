@@ -4,54 +4,66 @@ import pandas as pd
 from automatimebot import CompleteTask
 
 DATABASE_PATH = "automatime.db"
-TABLE_NAME = "sessions"
 
-DATABASE_COLUMNS = {
-    "project": {"dtype": "TINYTEXT", "optional": False},
-    "task": {"dtype": "TINYTEXT", "optional": True},
-    "username": {"dtype": "TINYTEXT", "optional": False},
-    "start": {"dtype": "DATETIME", "optional": False},
-    "stop": {"dtype": "DATETIME", "optional": False},
-    "duration": {"dtype": "FLOAT", "optional": False},
-    "comment": {"dtype": "TEXT", "optional": True},
+TABLES = {
+    "sessions": {
+        "project": {"dtype": "TINYTEXT", "optional": False},
+        "task": {"dtype": "TINYTEXT", "optional": True},
+        "username": {"dtype": "TINYTEXT", "optional": False},
+        "start": {"dtype": "DATETIME", "optional": False},
+        "stop": {"dtype": "DATETIME", "optional": False},
+        "duration": {"dtype": "FLOAT", "optional": False},
+        "comment": {"dtype": "TEXT", "optional": True},
+    },
+    "projects": {
+        "project": {"dtype": "TINYTEXT", "optional": False},
+        "tasks_dict": {"dtype": "TEXT", "optional": True},
+    },
+    "tasks": {
+        "task": {"dtype": "TINYTEXT", "optional": False},
+        "project": {"dtype": "TINYTEXT", "optional": False},
+        "workload": {"dtype": "FLOAT", "optional": False},
+    },
 }
 
-INSERT = f"""INSERT INTO {TABLE_NAME}
-             ({', '.join(DATABASE_COLUMNS.keys())})
-             VALUES ({','.join('?'*len(DATABASE_COLUMNS))});"""
+
+def insert_req(table: str, columns: dict):
+    return f"""INSERT INTO {table}
+            ({', '.join(columns.keys())})
+            VALUES ({','.join('?'*len(columns))});"""
+
 
 SELECT_SUMMARY = f"""SELECT username, SUM(duration)
-    FROM {TABLE_NAME}
+    FROM sessions
     WHERE project = ?
     GROUP BY username
     ORDER BY SUM(duration) DESC;"""
-
-SELECT_ALL = f"SELECT * FROM {TABLE_NAME}"
 
 
 def connect() -> sqlite3.Connection:
     return sqlite3.connect(DATABASE_PATH)
 
 
-def get_columns_desc():
+def get_columns_desc(columns: dict):
     desc_elements = []
-    for column_name, column_data in DATABASE_COLUMNS.items():
+    for column_name, column_data in columns.items():
         null_str = "" if column_data["optional"] else " NOT_NULL"
         desc_elements.append(f"{column_name} {column_data['dtype']}{null_str}")
     return ", ".join(desc_elements)
 
 
 def create_database():
-    create_req = f"""CREATE TABLE IF NOT EXISTS {TABLE_NAME}
-        (id INTEGER PRIMARY KEY, {get_columns_desc()});"""
     with connect() as db:
-        db.execute(create_req)
+        for table, columns in TABLES.items():
+            create_req = f"""CREATE TABLE IF NOT EXISTS {table}
+                (id INTEGER PRIMARY KEY, {get_columns_desc(columns)});"""
+            db.execute(create_req)
 
 
 def add_complete_task(project: str, complete_task: CompleteTask):
     with connect() as db:
         db.execute(
-            INSERT,
+            insert_req("sessions", TABLES["sessions"]),
             (
                 project,
                 complete_task.task.name,
@@ -70,12 +82,15 @@ def get_summary(project: str) -> pd.DataFrame:
     return pd.DataFrame(data=summary_list, columns=("username", "duration"))
 
 
-def get_all() -> pd.DataFrame:
+def get_all(table) -> pd.DataFrame:
     with connect() as db:
-        all_row = db.execute(SELECT_ALL).fetchall()
-    columns = ["id"] + list(DATABASE_COLUMNS.keys())
+        all_row = db.execute(f"SELECT * FROM {table}").fetchall()
+    columns = ["id"] + list(TABLES[table].keys())
     return pd.DataFrame(data=all_row, columns=columns)
 
 
 if __name__ == "__main__":
-    print(get_all())
+    for table in TABLES:
+        print(table)
+        print(get_all(table))
+        print()
