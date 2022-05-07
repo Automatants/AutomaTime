@@ -155,26 +155,30 @@ def ask_comment(update: Update, context: CallbackContext):
     author = get_user_name(update.effective_user)
     call = update.callback_query
     call.answer(text=f"Please {author} comment what you will work on.")
-    update.callback_query.delete_message()
     wait_comment = author
 
 
 def handle_current_tasks_dict(update: Update, context: CallbackContext):
     global current_tasks_dict
     call = update.callback_query
+    data = call.data
+
     try:
-        current_tasks_dict = current_tasks_dict[call.data]
+        current_tasks_dict = current_tasks_dict[data]
     except KeyError:
         for key in current_tasks_dict:
-            if key.startswith(call.data):
+            if key.startswith(data):
                 current_tasks_dict = current_tasks_dict[key]
+                data = key
+                break
 
     if isinstance(current_tasks_dict, dict):
         edit_reply_markup(update, context, list(current_tasks_dict.keys()))
         call.answer()
     else:
-        current_tasks_dict = call.data
+        current_tasks_dict = data
         ask_comment(update, context)
+        call.delete_message()
 
 
 def edit_reply_markup(update: Update, context: CallbackContext, new_options: List[str]):
