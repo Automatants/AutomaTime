@@ -13,10 +13,12 @@ from automatimebot import (
     CompleteTask,
     workers_in_chats,
     wait_comment,
+    wait_tasks,
 )
 from automatimebot.utils import pretty_time_delta
 from automatimebot.logging import get_logger
 from automatimebot.database import add_complete_task, get_summary
+from automatimebot.tasks import read_tasks, print_tasks
 
 LOGGER = get_logger(__name__)
 
@@ -78,10 +80,14 @@ def menu(update: Update, context: CallbackContext):
 
 
 def messageHandler(update: Update, context: CallbackContext):
+    global wait_comment
+    global wait_tasks
     text: str = update.message.text
-    author = f"@{update.effective_user.username}"
+    author = get_user_name(update.effective_user)
     if wait_comment is not None and author == wait_comment:
-        return send_task_start(update, context, text)
+        return send_start(update, context, text)
+    if wait_tasks is not None and author == wait_tasks:
+        return store_task(update, context)
 
 
 def queryHandler(update: Update, context: CallbackContext):
@@ -102,7 +108,7 @@ def queryHandler(update: Update, context: CallbackContext):
 def handle_start(update: Update, context: CallbackContext):
     global workers_in_chats
     global wait_comment
-    author = f"@{update.effective_user.username}"
+    author = get_user_name(update.effective_user)
     chat = get_chat_name(update.effective_chat)
     call = update.callback_query
     if chat not in workers_in_chats:
@@ -111,14 +117,14 @@ def handle_start(update: Update, context: CallbackContext):
     wait_comment = author
 
 
-def send_task_start(
+def send_start(
     update: Update,
     context: CallbackContext,
     comment: str,
 ):
     global workers_in_chats
     global wait_comment
-    author = f"@{update.effective_user.username}"
+    author = get_user_name(update.effective_user)
     chat = get_chat_name(update.effective_chat)
     date = update.message.date
 
@@ -134,7 +140,7 @@ def send_task_start(
 
 def handle_stop(update: Update, context: CallbackContext):
     global workers_in_chats
-    author = f"@{update.effective_user.username}"
+    author = get_user_name(update.effective_user)
     chat = get_chat_name(update.effective_chat)
     date = update.callback_query.message.date
     if chat in workers_in_chats and author in workers_in_chats[chat]:
@@ -184,8 +190,19 @@ def handle_summary(update: Update, context: CallbackContext):
     context.bot.send_message(chat_id=update.effective_chat.id, text=msg)
     update.callback_query.answer()
 
+
+def store_task(update: Update, context: CallbackContext):
+    tasks, tasks_dicts = read_tasks(update.message.text)
+
+
 def handle_load_task(update: Update, context: CallbackContext):
-    update.callback_query.answer()
+    global workers_in_chats
+    global wait_tasks
+    author = get_user_name(update.effective_user)
+    call = update.callback_query
+    call.answer(text=f"Please {author} send tasks in yaml format.")
+    wait_tasks = author
+
 
 def unknown(update: Update, context: CallbackContext):
     context.bot.send_message(
