@@ -74,22 +74,14 @@ def is_working(user: User, chat: Chat):
     )
 
 
-def menu(update: Update, context: CallbackContext):
+def data_menu(update: Update, context: CallbackContext):
     user = update.effective_user
-    chat = update.effective_chat
-    start_button = InlineKeyboardButton(START, callback_data=START)
-    stop_button = InlineKeyboardButton(STOP, callback_data=STOP)
-    action_button = stop_button if is_working(user, chat) else start_button
     buttons = [
-        [action_button],
-        [
-            InlineKeyboardButton(ISWORKING, callback_data=ISWORKING),
-            InlineKeyboardButton(SUMMARY, callback_data=SUMMARY),
-        ],
-        [InlineKeyboardButton(LOAD_TASKS, callback_data=LOAD_TASKS)],
+        [InlineKeyboardButton(ISWORKING, callback_data=ISWORKING)],
+        [InlineKeyboardButton(SUMMARY, callback_data=SUMMARY)],
     ]
     if not try_delete_message(
-        context.bot, update.effective_chat.id, update.message.message_id
+        context.bot, update.effective_chat, update.message.message_id
     ):
         return
 
@@ -100,12 +92,15 @@ def menu(update: Update, context: CallbackContext):
     )
 
 
-def try_delete_message(bot: Bot, chat_id, message_id) -> bool:
-    if bot.getChatMember(chat_id, bot.bot.id).can_delete_messages:
-        bot.delete_message(chat_id, message_id)
+def try_delete_message(bot: Bot, chat: Chat, message_id) -> bool:
+    if (
+        chat.type == "private"
+        or bot.getChatMember(chat.id, bot.bot.id).can_delete_messages
+    ):
+        bot.delete_message(chat.id, message_id)
         return True
     else:
-        bot.send_message(chat_id, "Please allow me to delete messages!")
+        bot.send_message(chat.id, "Please allow me to delete messages!")
         return False
 
 
@@ -129,15 +124,8 @@ def queryHandler(update: Update, context: CallbackContext):
 
     if text == ISWORKING:
         handle_is_working(update, context)
-    elif text.startswith(STOP):
-        handle_stop(update, context)
-    elif text.startswith(START):
-        if not handle_start(update, context):
-            return
     elif text.startswith(SUMMARY):
         handle_summary(update, context)
-    elif text.startswith(LOAD_TASKS):
-        handle_load_task(update, context)
     update.callback_query.delete_message()
 
 
@@ -146,6 +134,11 @@ def handle_start(update: Update, context: CallbackContext):
     global current_tasks_dict
     chat = get_chat_name(update.effective_chat)
     call = update.callback_query
+
+    if not try_delete_message(
+        context.bot, update.effective_chat, update.message.message_id
+    ):
+        return
 
     if chat not in workers_in_chats:
         workers_in_chats[chat] = {}
@@ -156,10 +149,9 @@ def handle_start(update: Update, context: CallbackContext):
         current_tasks_dict = tasks_dict
         edit_reply_markup(update, context, list(current_tasks_dict.keys()))
         call.answer()
-        return False
     else:
         ask_comment(update, context)
-        return True
+        update.callback_query.delete_message()
 
 
 def ask_comment(update: Update, context: CallbackContext):
@@ -194,9 +186,6 @@ def handle_current_tasks_dict(update: Update, context: CallbackContext):
 
 
 def edit_reply_markup(update: Update, context: CallbackContext, new_options: List[str]):
-    call = update.callback_query
-    call.edit_message_text("Choose a task:")
-
     def ensure_small(key: str):
         while len(key.encode("utf-8")) > 63:
             key = key[:-1]
@@ -206,7 +195,18 @@ def edit_reply_markup(update: Update, context: CallbackContext, new_options: Lis
         [InlineKeyboardButton(key, callback_data=ensure_small(key))]
         for key in new_options
     ]
-    call.edit_message_reply_markup(InlineKeyboardMarkup(buttons))
+
+    text = "Choose a task:"
+    call = update.callback_query
+    if call is None:
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=text,
+            reply_markup=InlineKeyboardMarkup(buttons),
+        )
+    else:
+        call.edit_message_text(text)
+        call.edit_message_reply_markup(InlineKeyboardMarkup(buttons))
 
 
 def send_start(
@@ -239,7 +239,13 @@ def handle_stop(update: Update, context: CallbackContext):
     global workers_in_chats
     author = get_user_name(update.effective_user)
     chat = get_chat_name(update.effective_chat)
-    date = update.callback_query.message.date
+    date = update.message.date
+
+    if not try_delete_message(
+        context.bot, update.effective_chat, update.message.message_id
+    ):
+        return
+
     if chat in workers_in_chats and author in workers_in_chats[chat]:
         session = workers_in_chats[chat].pop(author)
         complete_session = CompleteSession(session, date)
