@@ -57,10 +57,7 @@ class AutomatimeBot:
         return session
 
     def stop(self, update: Update, context: CallbackContext):
-        user_stop = handle_stop(update, context, self.workers_in_chats)
-        if user_stop is not None:
-            chat = get_chat_name(update.effective_chat)
-            self.workers_in_chats[chat].pop(user_stop)
+        return handle_stop(update, context, self.workers_in_chats)
 
     def data_menu(self, update: Update, context: CallbackContext):
         return data_menu(update, context)
