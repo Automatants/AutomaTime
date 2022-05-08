@@ -1,8 +1,9 @@
 from ctypes import Union
+from typing import Tuple
 import yaml
 
 
-def read_tasks(file: str):
+def read_tasks(file: str) -> Tuple[list, dict]:
     tasks_dicts = yaml.safe_load(file)
     tasks = parse_tasks(tasks_dicts)
     return tasks, tasks_dicts
