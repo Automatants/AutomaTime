@@ -29,6 +29,7 @@ def stop_msg_format(complete_session: CompleteSession):
 def handle_stop(
     update: Update,
     context: CallbackContext,
+    db_path: str,
     workers_in_chats: Dict[Chat, Dict[str, Session]],
 ):
     author = get_user_name(update.effective_user)
@@ -43,7 +44,7 @@ def handle_stop(
     if chat in workers_in_chats and author in workers_in_chats[chat]:
         session = workers_in_chats[chat].pop(author)
         complete_session = CompleteSession(session, date)
-        add_complete_session(chat, complete_session)
+        add_complete_session(db_path, chat, complete_session)
         msg = stop_msg_format(complete_session)
         context.bot.send_message(chat_id=update.effective_chat.id, text=msg)
         LOGGER.info(f"Update on {chat}: {msg}")

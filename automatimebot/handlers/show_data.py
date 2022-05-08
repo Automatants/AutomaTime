@@ -64,9 +64,9 @@ def handle_is_working(
     call.delete_message()
 
 
-def handle_summary(update: Update, context: CallbackContext):
+def handle_summary(update: Update, context: CallbackContext, db_path: str):
     chat = get_chat_name(update.effective_chat)
-    summary = get_summary(chat)
+    summary = get_summary(db_path, chat)
     call = update.callback_query
     msg = "Summary of time spent:\n" + "\n".join(
         [f"{user}: {pretty_time_delta(duration)}" for user, duration in summary.values]

@@ -4,6 +4,7 @@ from telegram.ext import CallbackContext
 
 from automatimebot import ISWORKING, SUMMARY
 from automatimebot.abc import Session
+from automatimebot.database import create_database
 from automatimebot.handlers.utils import get_chat_name, get_user_name
 from automatimebot.handlers.start import (
     handle_current_tasks_dict,
@@ -20,7 +21,9 @@ from automatimebot.handlers.show_data import (
 
 
 class AutomatimeBot:
-    def __init__(self) -> None:
+    def __init__(self, db_path: str) -> None:
+        self.db_path = db_path
+        create_database(db_path)
         self.workers_in_chats: Dict[Chat, Dict[str, Session]] = {}
         self.current_tasks_dict: dict = None
         self.wait_comment: str = None
@@ -31,7 +34,7 @@ class AutomatimeBot:
         if chat not in self.workers_in_chats:
             self.workers_in_chats[chat] = {}
 
-        task_dict, username = handle_start(update, context)
+        task_dict, username = handle_start(update, context, self.db_path)
         if task_dict is not None:
             self.current_tasks_dict = task_dict
         if username is not None:
@@ -77,7 +80,7 @@ class AutomatimeBot:
             return send_session_start(update, context, session)
         if self.wait_tasks is not None and author == self.wait_tasks:
             self.wait_tasks = None
-            return store_task(update, context)
+            return store_task(update, context, self.db_path)
 
     def queryHandler(self, update: Update, context: CallbackContext):
         text: str = update.callback_query.data
@@ -91,7 +94,7 @@ class AutomatimeBot:
         if text == ISWORKING:
             return handle_is_working(update, context, self.workers_in_chats)
         if text.startswith(SUMMARY):
-            return handle_summary(update, context)
+            return handle_summary(update, context, self.db_path)
 
     @staticmethod
     def unknown(update: Update, context: CallbackContext):

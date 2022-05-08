@@ -9,12 +9,12 @@ from automatimebot.logging import get_logger
 LOGGER = get_logger(__name__)
 
 
-def store_task(update: Update, context: CallbackContext):
+def store_task(update: Update, context: CallbackContext, db_path: str):
     chat = get_chat_name(update.effective_chat)
     author = get_user_name(update.effective_user)
 
     tasks, _ = read_tasks(update.message.text)
-    add_tasks(chat, tasks, update.message.text)
+    add_tasks(db_path, chat, tasks, update.message.text)
 
     context.bot.delete_message(update.effective_chat.id, update.message.message_id)
     context.bot.send_message(

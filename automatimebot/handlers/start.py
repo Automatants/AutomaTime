@@ -24,16 +24,13 @@ def start_msg_format(session: Session):
     return f"{START_CODE} {session.author} started working{task_comment_txt(session)}"
 
 
-def handle_start(
-    update: Update,
-    context: CallbackContext,
-):
+def handle_start(update: Update, context: CallbackContext, db_path: str):
     if not try_delete_message(
         context.bot, update.effective_chat, update.message.message_id
     ):
         return
 
-    tasks_text = get_project_tasks_dict(get_chat_name(update.effective_chat))
+    tasks_text = get_project_tasks_dict(db_path, get_chat_name(update.effective_chat))
     if tasks_text:
         _, tasks_dict = read_tasks(tasks_text[0][0])
         reply_markup = create_reply_markup(list(tasks_dict.keys()))
