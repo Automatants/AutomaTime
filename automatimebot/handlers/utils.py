@@ -5,19 +5,21 @@ from telegram.ext import CallbackContext
 from automatimebot.abc import Session
 
 
-def pretty_time_delta(seconds):
+def pretty_time_delta(seconds, compact=False):
     seconds = int(seconds)
+
     jeh, seconds = divmod(seconds, 28800)
+    jeh = f"{jeh:d}JEH" if jeh > 0 else ""
+
     hours, seconds = divmod(seconds, 3600)
+    hours = f"{hours:d}h" if hours > 0 else ""
+
     minutes, seconds = divmod(seconds, 60)
-    if jeh > 0:
-        return "%dJEH%dh%dm%ds" % (jeh, hours, minutes, seconds)
-    elif hours > 0:
-        return "%dh%dm%ds" % (hours, minutes, seconds)
-    elif minutes > 0:
-        return "%dm%ds" % (minutes, seconds)
-    else:
-        return "%ds" % (seconds,)
+    minutes = f"{minutes:d}m" if minutes > 0 else ""
+
+    seconds = f"{seconds:d}s"
+    sep = "" if compact else " "
+    return sep.join((jeh, hours, minutes, seconds))
 
 
 def get_chat_name(chat: Chat):
