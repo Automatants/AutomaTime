@@ -1,3 +1,4 @@
+from datetime import datetime
 import sqlite3
 from typing import List, Tuple
 import pandas as pd
@@ -113,8 +114,12 @@ def get_all(table) -> pd.DataFrame:
     return pd.DataFrame(data=all_row, columns=columns)
 
 
+def dump_database_to_xlsx():
+    file_name = f"database_dump_{datetime.now().strftime('%Y-%m-%d_%Hh%M')}.xlsx"
+    with pd.ExcelWriter(file_name) as writer:
+        for table in TABLES:
+            get_all(table).to_excel(writer, sheet_name=table)
+
+
 if __name__ == "__main__":
-    for table in TABLES:
-        print(table)
-        print(get_all(table))
-        print()
+    dump_database_to_xlsx()
