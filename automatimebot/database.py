@@ -114,8 +114,8 @@ def get_all(db_path: str, table) -> pd.DataFrame:
     return pd.DataFrame(data=all_row, columns=columns)
 
 
-def dump_database_to_xlsx(db_path: str):
-    file_name = f"database_dump_{datetime.now().strftime('%Y-%m-%d_%Hh%M')}.xlsx"
+def dump_database_to_xlsx(db_path: str, filename: str):
+    file_name = f"{filename}_{datetime.now().strftime('%Y-%m-%d_%Hh%M')}.xlsx"
     with pd.ExcelWriter(file_name) as writer:
         for table in TABLES:
             get_all(db_path, table).to_excel(writer, sheet_name=table)
@@ -149,8 +149,10 @@ def create_databale_from_xlsx(xlsx_path: str, db_path: str):
 
 if __name__ == "__main__":
     db_path = "automatime.db"
-    create_databale_from_xlsx("database_dump_2022-05-08_20h42.xlsx", db_path)
-    for table_name in TABLES:
-        print(table_name)
-        print(get_all(db_path, table_name))
-        print()
+    dump_database_to_xlsx(db_path, "database_dump")
+
+    # create_databale_from_xlsx("database_dump_2022-05-08_20h42.xlsx", db_path)
+    # for table_name in TABLES:
+    #     print(table_name)
+    #     print(get_all(db_path, table_name))
+    #     print()
