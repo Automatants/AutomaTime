@@ -310,8 +310,10 @@ def handle_load_task(update: Update, context: CallbackContext):
     global workers_in_chats
     global wait_tasks
     author = get_user_name(update.effective_user)
-    call = update.callback_query
-    call.answer(text=f"Please {author} send tasks in yaml format.")
+    context.bot.delete_message(update.effective_chat.id, update.message.message_id)
+    context.bot.send_message(
+        update.effective_chat.id, f"Please {author} send tasks in yaml format."
+    )
     wait_tasks = author
 
 
