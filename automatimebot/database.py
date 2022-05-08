@@ -121,7 +121,7 @@ def dump_database_to_xlsx(db_path: str):
             get_all(db_path, table).to_excel(writer, sheet_name=table)
 
 
-def create_databale_from_xlsx(xlsx_path: str):
+def create_databale_from_xlsx(xlsx_path: str, db_path: str):
     xlsx_df = pd.read_excel(xlsx_path, list(TABLES.keys()), index_col=0)
 
     for table_name in TABLES:
@@ -142,6 +142,15 @@ def create_databale_from_xlsx(xlsx_path: str):
 
             table["comment"] = table.apply(fusion_comment, axis=1)
 
+        table = table.filter(TABLES[table_name].keys(), axis=1)
+        with connect(db_path) as db:
+            table.to_sql(table_name, db)
+
 
 if __name__ == "__main__":
-    create_databale_from_xlsx("database_dump_2022-05-08_20h42.xlsx")
+    db_path = "automatime.db"
+    create_databale_from_xlsx("database_dump_2022-05-08_20h42.xlsx", db_path)
+    for table_name in TABLES:
+        print(table_name)
+        print(get_all(db_path, table_name))
+        print()
