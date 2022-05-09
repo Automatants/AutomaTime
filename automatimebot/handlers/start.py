@@ -41,7 +41,9 @@ def handle_start(update: Update, context: CallbackContext, db_path: str):
         return tasks_dict, None
     else:
         ask_comment(update, context)
-        update.callback_query.delete_message()
+        call = update.callback_query
+        if call is not None:
+            call.delete_message()
         return None, get_user_name(update.effective_user)
 
 
@@ -60,7 +62,11 @@ def send_session_start(
 def ask_comment(update: Update, context: CallbackContext):
     author = get_user_name(update.effective_user)
     call = update.callback_query
-    call.answer(text=f"Please {author} comment what you will work on.")
+    msg = f"Please {author} comment what you will work on."
+    if call is not None:
+        call.answer(text=msg)
+    else:
+        context.bot.send_message(update.effective_chat.id, msg)
 
 
 def handle_current_tasks_dict(
