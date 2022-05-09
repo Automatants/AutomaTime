@@ -60,7 +60,7 @@ class AutomatimeBot:
         return session
 
     def stop(self, update: Update, context: CallbackContext):
-        return handle_stop(update, context, self.workers_in_chats)
+        return handle_stop(update, context, self.db_path, self.workers_in_chats)
 
     def data_menu(self, update: Update, context: CallbackContext):
         return data_menu(update, context)
