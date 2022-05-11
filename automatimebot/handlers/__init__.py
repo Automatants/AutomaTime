@@ -70,7 +70,7 @@ class AutomatimeBot:
         self.wait_tasks = author
         return handle_load_task(update, context)
 
-    def messageHandler(self, update: Update, context: CallbackContext):
+    def textHandler(self, update: Update, context: CallbackContext):
         text: str = update.message.text
         author = get_user_name(update.effective_user)
         if self.wait_comment is not None and author == self.wait_comment:

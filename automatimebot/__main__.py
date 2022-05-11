@@ -21,7 +21,7 @@ if __name__ == "__main__":
     dispatcher.add_handler(CommandHandler("stop", bot.stop))
     dispatcher.add_handler(CommandHandler("tasks", bot.load_task))
     dispatcher.add_handler(CommandHandler("data", bot.data_menu))
-    dispatcher.add_handler(MessageHandler(Filters.text, bot.messageHandler))
+    dispatcher.add_handler(MessageHandler(Filters.text & (~ Filters.forwarded) & (~ Filters.update), bot.textHandler))
     dispatcher.add_handler(CallbackQueryHandler(bot.queryHandler))
     dispatcher.add_handler(MessageHandler(Filters.command, bot.unknown))
 
