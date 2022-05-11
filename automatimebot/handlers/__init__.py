@@ -78,6 +78,9 @@ class AutomatimeBot:
             self.wait_comment = None
             self.current_tasks_dict = None
             return send_session_start(update, context, session)
+
+    def yamlHandler(self,  update: Update, context: CallbackContext):
+        author = get_user_name(update.effective_user)
         if self.wait_tasks is not None and author == self.wait_tasks:
             self.wait_tasks = None
             return store_task(update, context, self.db_path)

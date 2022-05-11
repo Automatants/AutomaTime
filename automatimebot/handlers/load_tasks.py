@@ -13,8 +13,9 @@ def store_task(update: Update, context: CallbackContext, db_path: str):
     chat = get_chat_name(update.effective_chat)
     author = get_user_name(update.effective_user)
 
-    tasks, _ = read_tasks(update.message.text)
-    add_tasks(db_path, chat, tasks, update.message.text)
+    yaml_file = update.message.document.get_file()
+    tasks, tasks_dict = read_tasks(yaml_file)
+    add_tasks(db_path, chat, tasks, tasks_dict)
 
     context.bot.delete_message(update.effective_chat.id, update.message.message_id)
     context.bot.send_message(
