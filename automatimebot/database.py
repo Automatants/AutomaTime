@@ -13,7 +13,8 @@ TABLES = {
         "start": {"dtype": "DATETIME", "optional": False},
         "stop": {"dtype": "DATETIME", "optional": False},
         "duration": {"dtype": "FLOAT", "optional": False},
-        "comment": {"dtype": "TEXT", "optional": True},
+        "start_comment": {"dtype": "TEXT", "optional": True},
+        "stop_comment": {"dtype": "TEXT", "optional": True},
     },
     "projects": {
         "project": {"dtype": "TINYTEXT", "optional": False},
@@ -80,7 +81,8 @@ def add_complete_session(db_path: str, project: str, complete_task: CompleteSess
                 complete_task.session.start.strftime("%Y-%m-%d %H:%M:%S"),
                 complete_task.stop.strftime("%Y-%m-%d %H:%M:%S"),
                 complete_task.duration.total_seconds(),
-                complete_task.session.comment,
+                complete_task.session.start_comment,
+                complete_task.stop_comment,
             ),
         )
 
