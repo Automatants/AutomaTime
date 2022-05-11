@@ -1,10 +1,14 @@
-from ctypes import Union
-from typing import Tuple
+from typing import Tuple, Union
+from telegram import File
 import yaml
 
 
-def read_tasks(file: str) -> Tuple[list, dict]:
-    tasks_dicts = yaml.safe_load(file)
+def read_tasks(file: Union[str, File]) -> Tuple[list, dict]:
+    if isinstance(file, File):
+        with open(file.download(), 'r', encoding='utf-8') as f:
+            tasks_dicts = yaml.safe_load(f)
+    else:
+        tasks_dicts = yaml.safe_load(file)
     tasks = parse_tasks(tasks_dicts)
     return tasks, tasks_dicts
 
