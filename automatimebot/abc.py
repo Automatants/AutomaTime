@@ -7,7 +7,7 @@ from typing import Optional
 class Session:
     author: str
     start: datetime
-    comment: Optional[str] = field(default=None, repr=False)
+    start_comment: Optional[str] = field(default=None, repr=False)
     task: Optional[str] = field(default=None)
 
 
@@ -15,6 +15,7 @@ class Session:
 class CompleteSession:
     session: Session
     stop: datetime
+    stop_comment: Optional[str] = field(default=None, repr=False)
     duration: timedelta = field(init=False)
 
     def __post_init__(self):

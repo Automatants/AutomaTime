@@ -13,7 +13,8 @@ TABLES = {
         "start": {"dtype": "DATETIME", "optional": False},
         "stop": {"dtype": "DATETIME", "optional": False},
         "duration": {"dtype": "FLOAT", "optional": False},
-        "comment": {"dtype": "TEXT", "optional": True},
+        "start_comment": {"dtype": "TEXT", "optional": True},
+        "stop_comment": {"dtype": "TEXT", "optional": True},
     },
     "projects": {
         "project": {"dtype": "TINYTEXT", "optional": False},
@@ -80,7 +81,8 @@ def add_complete_session(db_path: str, project: str, complete_task: CompleteSess
                 complete_task.session.start.strftime("%Y-%m-%d %H:%M:%S"),
                 complete_task.stop.strftime("%Y-%m-%d %H:%M:%S"),
                 complete_task.duration.total_seconds(),
-                complete_task.session.comment,
+                complete_task.session.start_comment,
+                complete_task.stop_comment,
             ),
         )
 
@@ -126,22 +128,6 @@ def create_databale_from_xlsx(xlsx_path: str, db_path: str):
 
     for table_name in TABLES:
         table = xlsx_df[table_name]
-
-        # TODO: Split comments at promt to remove this
-        if table_name == "sessions":
-
-            def fusion_comment(row):
-                has_start = isinstance(row["comment_start"], str)
-                has_stop = isinstance(row["comment_stop"], str)
-                if has_start and has_stop:
-                    return f"{row['comment_start'].capitalize()}, {row['comment_stop'].lower()}"
-                elif has_start:
-                    return row["comment_start"].capitalize()
-                elif has_stop:
-                    return row["comment_stop"].capitalize()
-
-            table["comment"] = table.apply(fusion_comment, axis=1)
-
         table = table.filter(TABLES[table_name].keys(), axis=1)
         with connect(db_path) as db:
             table.to_sql(table_name, db)
@@ -151,7 +137,7 @@ if __name__ == "__main__":
     db_path = "automatime.db"
     dump_database_to_xlsx(db_path, "database_dump")
 
-    # create_databale_from_xlsx("database_dump_2022-05-08_20h42.xlsx", db_path)
+    # create_databale_from_xlsx("database_dump_2022-05-11_08h47.xlsx", db_path)
     # for table_name in TABLES:
     #     print(table_name)
     #     print(get_all(db_path, table_name))
