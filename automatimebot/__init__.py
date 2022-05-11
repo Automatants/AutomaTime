@@ -1,10 +1,5 @@
 """AutomaTime telegram bot"""
 
-from typing import Dict, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from telegram import Chat
-
 from automatimebot.abc import Session, CompleteSession
 
 # Global constants

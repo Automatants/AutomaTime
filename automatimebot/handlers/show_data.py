@@ -46,7 +46,7 @@ def handle_is_working(
         if workers_in_chat:
             workers_infos = [
                 f"{worker} since {pretty_time_delta((date - session.start).total_seconds())}"
-                f" on {session.comment}"
+                f" on {session.start_comment}"
                 for worker, session in workers_in_chat.items()
             ]
             workers_str = "\n".join(workers_infos)

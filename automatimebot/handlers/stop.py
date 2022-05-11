@@ -38,13 +38,19 @@ def ask_comment(update: Update, context: CallbackContext):
 def handle_stop(
     update: Update,
     context: CallbackContext,
+    workers_in_chats: Dict[Chat, Dict[str, Session]],
 ):
     if not try_delete_message(
         context.bot, update.effective_chat, update.message.message_id
     ):
         return
-    ask_comment(update, context)
 
+    author = get_user_name(update.effective_user)
+    chat = get_chat_name(update.effective_chat)
+
+    if chat in workers_in_chats and author in workers_in_chats[chat]:
+        ask_comment(update, context)
+        return get_user_name(update.effective_user)
 
 
 def send_session_stop(
@@ -62,5 +68,6 @@ def send_session_stop(
         complete_session = CompleteSession(session, date, comment)
         add_complete_session(db_path, chat, complete_session)
         msg = stop_msg_format(complete_session)
+        context.bot.delete_message(update.effective_chat.id, update.message.message_id)
         context.bot.send_message(chat_id=update.effective_chat.id, text=msg)
         LOGGER.info(f"Update on {chat}: {msg}")

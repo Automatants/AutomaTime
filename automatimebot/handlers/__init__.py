@@ -61,8 +61,7 @@ class AutomatimeBot:
         return session
 
     def stop(self, update: Update, context: CallbackContext):
-        username = handle_stop(update, context, self.db_path, self.workers_in_chats)
-        self.wait_stop_comment = username
+        self.wait_stop_comment = handle_stop(update, context, self.workers_in_chats)
 
     def data_menu(self, update: Update, context: CallbackContext):
         return data_menu(update, context)

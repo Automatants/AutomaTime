@@ -35,12 +35,12 @@ def get_user_name(user: User):
 
 def task_comment_txt(session: Session):
     task_txt = ""
-    if session.task and session.comment:
-        task_txt = f" on {session.task} ({session.comment})"
+    if session.task and session.start_comment:
+        task_txt = f" on {session.task} ({session.start_comment})"
     elif session.task is not None:
         task_txt = f" on {session.task}"
-    elif session.comment is not None:
-        task_txt = f" on {session.comment}"
+    elif session.start_comment is not None:
+        task_txt = f" on {session.start_comment}"
     return task_txt
 
 
