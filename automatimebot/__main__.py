@@ -1,3 +1,4 @@
+import logging
 from telegram.ext import (
     Updater,
     CommandHandler,
@@ -5,7 +6,6 @@ from telegram.ext import (
     Filters,
     CallbackQueryHandler,
 )
-import logging
 
 from automatimebot.handlers import AutomatimeBot
 from automatimebot.logging import init_logger
@@ -13,7 +13,11 @@ from automatimebot.logging import init_logger
 if __name__ == "__main__":
     init_logger(logging.INFO, __package__)
 
-    updater = Updater("5328266305:AAGen99eby9tmWj62_EFzNhiNc73f_d6Jds")
+    key_path = ".key"
+    with open(key_path, "r", encoding="utf-8") as key_file:
+        key = key_file.readline()
+
+    updater = Updater(key)
     dispatcher = updater.dispatcher
     bot = AutomatimeBot(db_path="automatime.db")
 
@@ -21,8 +25,15 @@ if __name__ == "__main__":
     dispatcher.add_handler(CommandHandler("stop", bot.stop))
     dispatcher.add_handler(CommandHandler("tasks", bot.load_task))
     dispatcher.add_handler(CommandHandler("data", bot.data_menu))
-    dispatcher.add_handler(MessageHandler(Filters.text & (~ Filters.forwarded) & (~ Filters.update.edited_message), bot.textHandler))
-    dispatcher.add_handler(MessageHandler(Filters.document.file_extension("yaml"), bot.yamlHandler))
+    dispatcher.add_handler(
+        MessageHandler(
+            Filters.text & (~Filters.forwarded) & (~Filters.update.edited_message),
+            bot.textHandler,
+        )
+    )
+    dispatcher.add_handler(
+        MessageHandler(Filters.document.file_extension("yaml"), bot.yamlHandler)
+    )
     dispatcher.add_handler(CallbackQueryHandler(bot.queryHandler))
     dispatcher.add_handler(MessageHandler(Filters.command, bot.unknown))
 

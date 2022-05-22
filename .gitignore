@@ -130,3 +130,6 @@ dmypy.json
 
 # SQL Database
 *.db
+
+# Bot key
+*.key
