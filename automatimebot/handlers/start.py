@@ -6,7 +6,7 @@ from automatimebot import START_CODE
 from automatimebot.abc import Session
 from automatimebot.handlers.utils import (
     create_reply_markup,
-    task_comment_txt,
+    session_comment_txt,
     get_chat_name,
     try_delete_message,
     get_user_name,
@@ -21,7 +21,9 @@ LOGGER = get_logger(__name__)
 
 
 def start_msg_format(session: Session):
-    return f"{START_CODE} {session.author} started working{task_comment_txt(session)}"
+    return (
+        f"{START_CODE} {session.author} started working{session_comment_txt(session)}"
+    )
 
 
 def handle_start(update: Update, context: CallbackContext, db_path: str):

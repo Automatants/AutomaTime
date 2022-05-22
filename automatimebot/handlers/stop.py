@@ -5,10 +5,11 @@ from telegram.ext import CallbackContext
 from automatimebot import STOP_CODE
 from automatimebot.abc import CompleteSession, Session
 from automatimebot.handlers.utils import (
+    complete_session_comment_txt,
     get_chat_name,
     get_user_name,
     pretty_time_delta,
-    task_comment_txt,
+    session_comment_txt,
     try_delete_message,
 )
 from automatimebot.database import add_complete_session
@@ -22,8 +23,10 @@ def stop_msg_format(complete_session: CompleteSession):
     human_timestamp = pretty_time_delta(complete_session.duration.total_seconds())
     return (
         f"{STOP_CODE} {session.author} stopped working"
-        f"{task_comment_txt(session)} after {human_timestamp} [{complete_session.duration}]"
+        f"{complete_session_comment_txt(complete_session)}"
+        f" after {human_timestamp} [{complete_session.duration}]"
     )
+
 
 def ask_comment(update: Update, context: CallbackContext):
     author = get_user_name(update.effective_user)
