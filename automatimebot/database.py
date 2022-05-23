@@ -166,11 +166,12 @@ if __name__ == "__main__":
     config = parser.parse_args()
 
     db_path = config.path
-    if config.dump_path is not None:
+    if config.dump_path is not None and os.path.isfile(db_path):
         dump_database_to_xlsx(db_path, config.dump_path)
 
     if config.load_dump is not None:
-        os.remove(db_path)
+        if os.path.isfile(db_path):
+            os.remove(db_path)
         create_databale_from_xlsx(config.load_dump, db_path)
         for table_name in TABLES:
             print(table_name)
