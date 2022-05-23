@@ -123,6 +123,8 @@ def dump_database_to_xlsx(db_path: str, dirpath: str):
     os.makedirs(dirpath, exist_ok=True)
     filename = f"{datetime.now().strftime('%Y-%m-%d_%Hh%M')}.xlsx"
     filepath = os.path.join(dirpath, filename)
+
+    # pylint: disable=abstract-class-instantiated
     with pd.ExcelWriter(filepath) as writer:
         for table in TABLES:
             get_all(db_path, table).to_excel(writer, sheet_name=table)
