@@ -1,4 +1,7 @@
+import argparse
 from datetime import datetime
+import os
+
 import sqlite3
 from typing import List, Tuple
 import pandas as pd
@@ -116,9 +119,11 @@ def get_all(db_path: str, table) -> pd.DataFrame:
     return pd.DataFrame(data=all_row, columns=columns)
 
 
-def dump_database_to_xlsx(db_path: str, filename: str):
-    file_name = f"{filename}_{datetime.now().strftime('%Y-%m-%d_%Hh%M')}.xlsx"
-    with pd.ExcelWriter(file_name) as writer:
+def dump_database_to_xlsx(db_path: str, dirpath: str):
+    os.makedirs(dirpath, exist_ok=True)
+    filename = f"{datetime.now().strftime('%Y-%m-%d_%Hh%M')}.xlsx"
+    filepath = os.path.join(dirpath, filename)
+    with pd.ExcelWriter(filepath) as writer:
         for table in TABLES:
             get_all(db_path, table).to_excel(writer, sheet_name=table)
 
@@ -126,19 +131,48 @@ def dump_database_to_xlsx(db_path: str, filename: str):
 def create_databale_from_xlsx(xlsx_path: str, db_path: str):
     xlsx_df = pd.read_excel(xlsx_path, list(TABLES.keys()), index_col=0)
 
-    for table_name in TABLES:
+    for table_name, table_ref in TABLES.items():
         table = xlsx_df[table_name]
-        table = table.filter(TABLES[table_name].keys(), axis=1)
+        table = table.filter(table_ref.keys(), axis=1)
         with connect(db_path) as db:
             table.to_sql(table_name, db)
 
 
-if __name__ == "__main__":
-    db_path = "automatime.db"
-    dump_database_to_xlsx(db_path, "database_dump")
+def build_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--path",
+        "-p",
+        help="Path to the database. Default to automatime.db",
+        default="automatime.db",
+    )
+    parser.add_argument(
+        "--dump-path",
+        "-o",
+        help="Path to the database dump. Default to database_dumps",
+        default="database_dumps",
+    )
+    parser.add_argument(
+        "--load-dump",
+        "-l",
+        help="Path to the database dump to load from. No loading if None given.",
+        default=None,
+    )
+    return parser
 
-    # create_databale_from_xlsx("database_dump_2022-05-11_08h47.xlsx", db_path)
-    # for table_name in TABLES:
-    #     print(table_name)
-    #     print(get_all(db_path, table_name))
-    #     print()
+
+if __name__ == "__main__":
+    parser = build_parser()
+    config = parser.parse_args()
+
+    db_path = config.path
+    if config.dump_path is not None:
+        dump_database_to_xlsx(db_path, config.dump_path)
+
+    if config.load_dump is not None:
+        os.remove(db_path)
+        create_databale_from_xlsx(config.load_dump, db_path)
+        for table_name in TABLES:
+            print(table_name)
+            print(get_all(db_path, table_name))
+            print()

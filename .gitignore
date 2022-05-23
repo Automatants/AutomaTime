@@ -128,7 +128,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# SQL Database
+# SQL Database and dumps
+database_dumps
 *.db
 
 # Bot key
