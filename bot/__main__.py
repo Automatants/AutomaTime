@@ -7,7 +7,7 @@ from telegram.ext import (
     CallbackQueryHandler,
 )
 
-from bot.handlers import AutomatimeBot
+from bot.handlers import Bot
 from bot.logging import init_logger
 
 if __name__ == "__main__":
@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
     updater = Updater(key)
     dispatcher = updater.dispatcher
-    bot = AutomatimeBot(db_path="automatime.db")
+    bot = Bot(db_path="automatime.db")
 
     dispatcher.add_handler(CommandHandler("start", bot.start))
     dispatcher.add_handler(CommandHandler("stop", bot.stop))

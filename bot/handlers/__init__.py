@@ -20,7 +20,7 @@ from bot.handlers.show_data import (
 )
 
 
-class AutomatimeBot:
+class Bot:
     def __init__(self, db_path: str) -> None:
         self.db_path = db_path
         create_database(db_path)
