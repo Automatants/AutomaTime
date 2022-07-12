@@ -2,18 +2,18 @@ from typing import Dict
 from telegram import Chat, Update
 from telegram.ext import CallbackContext
 
-from automatimebot import ISWORKING, SUMMARY
-from automatimebot.abc import Session
-from automatimebot.database import create_database
-from automatimebot.handlers.utils import get_chat_name, get_user_name
-from automatimebot.handlers.start import (
+from bot import ISWORKING, SUMMARY
+from bot.abc import Session
+from bot.database import create_database
+from bot.handlers.utils import get_chat_name, get_user_name
+from bot.handlers.start import (
     handle_current_tasks_dict,
     send_session_start,
     handle_start,
 )
-from automatimebot.handlers.stop import handle_stop, send_session_stop
-from automatimebot.handlers.load_tasks import store_task, handle_load_task
-from automatimebot.handlers.show_data import (
+from bot.handlers.stop import handle_stop, send_session_stop
+from bot.handlers.load_tasks import store_task, handle_load_task
+from bot.handlers.show_data import (
     handle_is_working,
     handle_summary,
     data_menu,

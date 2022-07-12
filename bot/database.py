@@ -6,7 +6,7 @@ import sqlite3
 from typing import List, Tuple
 import pandas as pd
 
-from automatimebot import CompleteSession
+from bot import CompleteSession
 
 TABLES = {
     "sessions": {

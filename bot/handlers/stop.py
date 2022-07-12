@@ -2,9 +2,9 @@ from typing import Dict
 from telegram import Chat, Update
 from telegram.ext import CallbackContext
 
-from automatimebot import STOP_CODE
-from automatimebot.abc import CompleteSession, Session
-from automatimebot.handlers.utils import (
+from bot import STOP_CODE
+from bot.abc import CompleteSession, Session
+from bot.handlers.utils import (
     complete_session_comment_txt,
     get_chat_name,
     get_user_name,
@@ -12,8 +12,8 @@ from automatimebot.handlers.utils import (
     session_comment_txt,
     try_delete_message,
 )
-from automatimebot.database import add_complete_session
-from automatimebot.logging import get_logger
+from bot.database import add_complete_session
+from bot.logging import get_logger
 
 LOGGER = get_logger(__name__)
 

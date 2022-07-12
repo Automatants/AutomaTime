@@ -2,9 +2,9 @@ from typing import Any, Dict, Union
 from telegram import Update
 from telegram.ext import CallbackContext
 
-from automatimebot import START_CODE
-from automatimebot.abc import Session
-from automatimebot.handlers.utils import (
+from bot import START_CODE
+from bot.abc import Session
+from bot.handlers.utils import (
     create_reply_markup,
     session_comment_txt,
     get_chat_name,
@@ -12,9 +12,9 @@ from automatimebot.handlers.utils import (
     get_user_name,
     edit_reply_markup,
 )
-from automatimebot.tasks import read_tasks
-from automatimebot.database import get_project_tasks_dict
-from automatimebot.logging import get_logger
+from bot.tasks import read_tasks
+from bot.database import get_project_tasks_dict
+from bot.logging import get_logger
 
 
 LOGGER = get_logger(__name__)

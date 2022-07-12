@@ -1,10 +1,10 @@
 from telegram import Update
 from telegram.ext import CallbackContext
 
-from automatimebot.handlers.utils import get_chat_name, get_user_name
-from automatimebot.tasks import read_tasks
-from automatimebot.database import add_tasks
-from automatimebot.logging import get_logger
+from bot.handlers.utils import get_chat_name, get_user_name
+from bot.tasks import read_tasks
+from bot.database import add_tasks
+from bot.logging import get_logger
 
 LOGGER = get_logger(__name__)
 

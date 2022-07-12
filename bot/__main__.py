@@ -7,8 +7,8 @@ from telegram.ext import (
     CallbackQueryHandler,
 )
 
-from automatimebot.handlers import AutomatimeBot
-from automatimebot.logging import init_logger
+from bot.handlers import AutomatimeBot
+from bot.logging import init_logger
 
 if __name__ == "__main__":
     init_logger(logging.INFO, __package__)

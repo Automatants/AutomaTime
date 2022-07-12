@@ -1,6 +1,6 @@
 """AutomaTime telegram bot"""
 
-from automatimebot.abc import Session, CompleteSession
+from bot.abc import Session, CompleteSession
 
 # Global constants
 START_CODE = "#START"

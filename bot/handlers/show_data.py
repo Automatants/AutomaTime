@@ -2,15 +2,15 @@ from typing import Dict
 from telegram import Chat, InlineKeyboardButton, InlineKeyboardMarkup, Update, User
 from telegram.ext import CallbackContext
 
-from automatimebot import ISWORKING, SUMMARY
-from automatimebot.abc import Session
-from automatimebot.handlers.utils import (
+from bot import ISWORKING, SUMMARY
+from bot.abc import Session
+from bot.handlers.utils import (
     get_chat_name,
     get_user_name,
     pretty_time_delta,
     try_delete_message,
 )
-from automatimebot.database import get_summary
+from bot.database import get_summary
 
 
 def data_menu(update: Update, context: CallbackContext):
