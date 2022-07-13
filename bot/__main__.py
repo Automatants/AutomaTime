@@ -21,21 +21,22 @@ if __name__ == "__main__":
     dispatcher = updater.dispatcher
     bot = Bot(db_path="timerbot.db")
 
-    dispatcher.add_handler(CommandHandler("start", bot.start))
-    dispatcher.add_handler(CommandHandler("stop", bot.stop))
-    dispatcher.add_handler(CommandHandler("tasks", bot.load_task))
-    dispatcher.add_handler(CommandHandler("data", bot.data_menu))
-    dispatcher.add_handler(
+    handlers = (
+        CommandHandler("start", bot.start),
+        CommandHandler("stop", bot.stop),
+        CommandHandler("tasks", bot.load_task),
+        CommandHandler("data", bot.data_menu),
         MessageHandler(
             Filters.text & (~Filters.forwarded) & (~Filters.update.edited_message),
             bot.textHandler,
-        )
+        ),
+        MessageHandler(Filters.document.file_extension("yaml"), bot.yamlHandler),
+        CallbackQueryHandler(bot.queryHandler),
+        MessageHandler(Filters.command, bot.unknown)
     )
-    dispatcher.add_handler(
-        MessageHandler(Filters.document.file_extension("yaml"), bot.yamlHandler)
-    )
-    dispatcher.add_handler(CallbackQueryHandler(bot.queryHandler))
-    dispatcher.add_handler(MessageHandler(Filters.command, bot.unknown))
+
+    for handler in handlers:
+        dispatcher.add_handler(handler)
 
     updater.start_polling()
     updater.idle()
