@@ -3,7 +3,7 @@ from telegram import Chat, Update
 from telegram.ext import CallbackContext
 
 
-from bot.abc import Session
+from bot.dataclasses import Session
 from bot.handlers.utils import (
     get_chat_name,
     pretty_time_delta,

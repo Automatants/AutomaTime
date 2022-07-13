@@ -3,7 +3,7 @@ from telegram import Chat, Update
 from telegram.ext import CallbackContext
 
 from bot import STOP_CODE
-from bot.abc import CompleteSession, Session
+from bot.dataclasses import CompleteSession, Session
 from bot.handlers.utils import (
     complete_session_comment_txt,
     get_chat_name,

@@ -1,3 +1,5 @@
+""" Module for dataclasses. """
+
 from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from typing import Optional

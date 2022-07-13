@@ -3,7 +3,7 @@ from telegram import Update
 from telegram.ext import CallbackContext
 
 from bot import START_CODE
-from bot.abc import Session
+from bot.dataclasses import Session
 from bot.handlers.utils import (
     create_reply_markup,
     session_comment_txt,

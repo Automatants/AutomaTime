@@ -2,7 +2,7 @@ from typing import List
 from telegram import Bot, Chat, InlineKeyboardButton, InlineKeyboardMarkup, Update, User
 from telegram.ext import CallbackContext
 
-from bot.abc import CompleteSession, Session
+from bot.dataclasses import CompleteSession, Session
 
 
 def pretty_time_delta(seconds, compact=False):

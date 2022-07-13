@@ -4,7 +4,7 @@ from telegram import Chat, Update, InlineKeyboardButton, InlineKeyboardMarkup, U
 from telegram.ext import CallbackContext
 
 from bot import ISWORKING, SUMMARY
-from bot.abc import Session
+from bot.dataclasses import Session
 from bot.database import create_database
 from bot.handlers.utils import get_chat_name, get_user_name, try_delete_message
 from bot.handlers.start import (
