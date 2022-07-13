@@ -4,7 +4,16 @@ import logging
 from colorama import Fore, Style
 
 
-def init_logger(log_level: int, package_name: str):
+def init_logger(log_level: int, package_name: str) -> logging.Logger:
+    """Initialize the logger of the application.
+
+    Args:
+        log_level (int): Logging level.
+        package_name (str): Name of the package to display.
+
+    Returns:
+        logging.Logger: Logger for the main package execution.
+    """
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(package_name)
     logger.setLevel(log_level)
