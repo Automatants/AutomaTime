@@ -7,6 +7,7 @@ from typing import Optional
 
 @dataclass
 class Session:
+    """ Planned work session """
     author: str
     start: datetime
     start_comment: Optional[str] = field(default=None, repr=False)
@@ -15,6 +16,7 @@ class Session:
 
 @dataclass
 class CompleteSession:
+    """ Complete work session """
     session: Session
     stop: datetime
     stop_comment: Optional[str] = field(default=None, repr=False)

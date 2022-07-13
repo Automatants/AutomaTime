@@ -1,3 +1,5 @@
+""" Module for handling the database requests. """
+
 import argparse
 from datetime import datetime
 import os
@@ -32,6 +34,7 @@ TABLES = {
 
 
 def insert_req(table: str):
+    """Build a insert request based on table metadatas."""
     return f"""INSERT INTO {table}
             ({', '.join(TABLES[table].keys())})
             VALUES ({','.join('?'*len(TABLES[table]))});"""
@@ -54,6 +57,14 @@ DELETE_PROJECT = "DELETE FROM projects WHERE project = ?;"
 
 
 def connect(db_path: str) -> sqlite3.Connection:
+    """Connect to the database.
+
+    Args:
+        db_path (str): Path to the database file.
+
+    Returns:
+        sqlite3.Connection: Connexion to the database.
+    """
     return sqlite3.connect(db_path)
 
 
@@ -66,6 +77,12 @@ def get_columns_desc(columns: dict):
 
 
 def create_database(db_path: str):
+    """ Create a database using tables metadata if they do not already exist.
+
+    Args:
+        db_path (str): Path to the database file.
+    
+    """
     with connect(db_path) as db:
         for table, columns in TABLES.items():
             create_req = f"""CREATE TABLE IF NOT EXISTS {table}
@@ -74,6 +91,13 @@ def create_database(db_path: str):
 
 
 def add_complete_session(db_path: str, project: str, complete_task: CompleteSession):
+    """ Add a complete session to the database.
+
+    Args:
+        db_path (str): Path to the database file.
+        project (str): Name of the project.
+        complete_task (CompleteSession): Complete work session data.
+    """
     with connect(db_path) as db:
         db.execute(
             insert_req("sessions"),
@@ -93,6 +117,14 @@ def add_complete_session(db_path: str, project: str, complete_task: CompleteSess
 def add_tasks(
     db_path: str, project: str, tasks: List[Tuple[str, float]], tasks_dict: dict
 ):
+    """Add tasks to the database.
+
+    Args:
+        db_path (str): Path to the database file.
+        project (str): Name of the project.
+        tasks (List[Tuple[str, float]]): List of tasks and their estimated times.
+        tasks_dict (dict): Dictionary of the structure of tasks.
+    """
     with connect(db_path) as db:
         db.execute(DELETE_TASKS_FROM_PROJECT, (project,))
         db.execute(DELETE_PROJECT, (project,))
@@ -102,17 +134,44 @@ def add_tasks(
 
 
 def get_summary(db_path: str, project: str) -> pd.DataFrame:
+    """Get the summary of time spent on tasks from the database.
+
+    Args:
+        db_path (str): Path to the database file.
+        project (str): Name of the project.
+
+    Returns:
+        pd.DataFrame: Summary of time spent on tasks.
+    """
     with connect(db_path) as db:
         summary_list = db.execute(SELECT_SUMMARY, (project,)).fetchall()
     return pd.DataFrame(data=summary_list, columns=("username", "duration"))
 
 
 def get_project_tasks_dict(db_path: str, project: str) -> dict:
+    """Get the structure of tasks from a project.
+
+    Args:
+        db_path (str): Path to the database file.
+        project (str): Name of the project.
+
+    Returns:
+        dict: Structure of tasks of the given project.
+    """
     with connect(db_path) as db:
         return db.execute(SELECT_TASKS_DICT, (project,)).fetchall()
 
 
 def get_all(db_path: str, table) -> pd.DataFrame:
+    """Get all data from the database as a Dataframe.
+
+    Args:
+        db_path (str): Path to the database file.
+        table (_type_): Name of the project.
+
+    Returns:
+        pd.DataFrame: Dataframe of all data in the database.
+    """
     with connect(db_path) as db:
         all_row = db.execute(f"SELECT * FROM {table}").fetchall()
     columns = ["id"] + list(TABLES[table].keys())
@@ -120,6 +179,12 @@ def get_all(db_path: str, table) -> pd.DataFrame:
 
 
 def dump_database_to_xlsx(db_path: str, dirpath: str):
+    """Dump the database to a xlsx file.
+
+    Args:
+        db_path (str): Path to the database file.
+        dirpath (str): Directory in which to dump the database.
+    """
     os.makedirs(dirpath, exist_ok=True)
     filename = f"{datetime.now().strftime('%Y-%m-%d_%Hh%M')}.xlsx"
     filepath = os.path.join(dirpath, filename)
@@ -130,7 +195,13 @@ def dump_database_to_xlsx(db_path: str, dirpath: str):
             get_all(db_path, table).to_excel(writer, sheet_name=table)
 
 
-def create_databale_from_xlsx(xlsx_path: str, db_path: str):
+def create_database_from_xlsx(xlsx_path: str, db_path: str):
+    """Create a database from a xlsx dump file.
+
+    Args:
+        xlsx_path (str): Path to the xslx dump.
+        db_path (str): Path to the created database.
+    """
     xlsx_df = pd.read_excel(xlsx_path, list(TABLES.keys()), index_col=0)
 
     for table_name, table_ref in TABLES.items():
@@ -140,7 +211,12 @@ def create_databale_from_xlsx(xlsx_path: str, db_path: str):
             table.to_sql(table_name, db)
 
 
-def build_parser():
+def build_parser() -> argparse.ArgumentParser:
+    """Build a parser for database command line interface.
+
+    Returns:
+        ArgumentParser: Parser for the database CLI.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--path",
@@ -162,8 +238,7 @@ def build_parser():
     )
     return parser
 
-
-if __name__ == "__main__":
+def main():
     parser = build_parser()
     config = parser.parse_args()
 
@@ -174,8 +249,11 @@ if __name__ == "__main__":
     if config.load_dump is not None:
         if os.path.isfile(db_path):
             os.remove(db_path)
-        create_databale_from_xlsx(config.load_dump, db_path)
+        create_database_from_xlsx(config.load_dump, db_path)
         for table_name in TABLES:
             print(table_name)
             print(get_all(db_path, table_name))
             print()
+
+if __name__ == "__main__":
+    main()
