@@ -1,6 +1,6 @@
-# AutomaTime
+# Bycelium Timer
 
-Repository for the AutomaTime telegram bot
+A telegram bot to manage work times !
 
 ## Installation
 

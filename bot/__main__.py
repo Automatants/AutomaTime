@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
     updater = Updater(key)
     dispatcher = updater.dispatcher
-    bot = Bot(db_path="automatime.db")
+    bot = Bot(db_path="timerbot.db")
 
     dispatcher.add_handler(CommandHandler("start", bot.start))
     dispatcher.add_handler(CommandHandler("stop", bot.stop))
