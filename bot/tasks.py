@@ -5,7 +5,7 @@ import yaml
 
 def read_tasks(file: Union[str, File]) -> Tuple[list, dict]:
     if isinstance(file, File):
-        with open(file.download(), 'r', encoding='utf-8') as f:
+        with open(file.download(), "r", encoding="utf-8") as f:
             tasks_dicts = yaml.safe_load(f)
     else:
         tasks_dicts = yaml.safe_load(file)

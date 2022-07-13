@@ -16,7 +16,7 @@ from bot.logging import init_logger
 if __name__ == "__main__":
     init_logger(logging.INFO, __package__)
 
-    dotenv_path = '.env'
+    dotenv_path = ".env"
     if os.path.isfile(dotenv_path):
         load_dotenv(dotenv_path)
 
@@ -37,7 +37,7 @@ if __name__ == "__main__":
         ),
         MessageHandler(Filters.document.file_extension("yaml"), bot.yamlHandler),
         CallbackQueryHandler(bot.queryHandler),
-        MessageHandler(Filters.command, bot.unknown)
+        MessageHandler(Filters.command, bot.unknown),
     )
 
     for handler in handlers:

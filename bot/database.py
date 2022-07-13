@@ -77,11 +77,11 @@ def get_columns_desc(columns: dict):
 
 
 def create_database(db_path: str):
-    """ Create a database using tables metadata if they do not already exist.
+    """Create a database using tables metadata if they do not already exist.
 
     Args:
         db_path (str): Path to the database file.
-    
+
     """
     with connect(db_path) as db:
         for table, columns in TABLES.items():
@@ -91,7 +91,7 @@ def create_database(db_path: str):
 
 
 def add_complete_session(db_path: str, project: str, complete_task: CompleteSession):
-    """ Add a complete session to the database.
+    """Add a complete session to the database.
 
     Args:
         db_path (str): Path to the database file.
@@ -238,6 +238,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     return parser
 
+
 def main():
     parser = build_parser()
     config = parser.parse_args()
@@ -254,6 +255,7 @@ def main():
             print(table_name)
             print(get_all(db_path, table_name))
             print()
+
 
 if __name__ == "__main__":
     main()

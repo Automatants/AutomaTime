@@ -22,6 +22,7 @@ from bot.handlers.show_data import (
 
 class Bot:
     """The global Bot class to handle users interactions."""
+
     def __init__(self, db_path: str) -> None:
         self.db_path = db_path
         create_database(db_path)
@@ -101,7 +102,9 @@ class Bot:
             [InlineKeyboardButton(SUMMARY, callback_data=SUMMARY)],
         ]
         if not try_delete_message(
-            context.bot, update.effective_chat, update.message.message_id,
+            context.bot,
+            update.effective_chat,
+            update.message.message_id,
         ):
             return
 
@@ -110,7 +113,6 @@ class Bot:
             text=f"What do you want to do {get_user_name(user)}?",
             reply_markup=InlineKeyboardMarkup(buttons),
         )
-
 
     def load_task(self, update: Update, context: CallbackContext) -> None:
         """Load a tasks yaml file.
@@ -143,7 +145,7 @@ class Bot:
             self.wait_stop_comment[author] = False
             send_session_stop(update, context, self.db_path, self.workers_in_chats)
 
-    def yamlHandler(self,  update: Update, context: CallbackContext):
+    def yamlHandler(self, update: Update, context: CallbackContext):
         """Handle a yaml file input.
 
         Args:
