@@ -1,11 +1,12 @@
 from typing import Dict
-from telegram import Chat, Update
+from telegram import Chat, Update, InlineKeyboardButton, InlineKeyboardMarkup, User
+
 from telegram.ext import CallbackContext
 
 from bot import ISWORKING, SUMMARY
 from bot.abc import Session
 from bot.database import create_database
-from bot.handlers.utils import get_chat_name, get_user_name
+from bot.handlers.utils import get_chat_name, get_user_name, try_delete_message
 from bot.handlers.start import (
     handle_current_tasks_dict,
     send_session_start,
@@ -16,7 +17,6 @@ from bot.handlers.load_tasks import store_task, handle_load_task
 from bot.handlers.show_data import (
     handle_is_working,
     handle_summary,
-    data_menu,
 )
 
 
@@ -31,6 +31,12 @@ class Bot:
         self.wait_tasks: str = None
 
     def start(self, update: Update, context: CallbackContext):
+        """Let a user start a task.
+
+        Args:
+            update (Update): Incomming update.
+            context (CallbackContext): Context of the update.
+        """
         chat = get_chat_name(update.effective_chat)
         if chat not in self.workers_in_chats:
             self.workers_in_chats[chat] = {}
@@ -47,6 +53,16 @@ class Bot:
         context: CallbackContext,
         comment: str,
     ) -> Session:
+        """Start a working session for the user that sent the message.
+
+        Args:
+            update (Update): Incomming update.
+            context (CallbackContext): Context of the update.
+            comment (str): Comment given by the user.
+
+        Returns:
+            Session: _description_
+        """
         author = get_user_name(update.effective_user)
         chat = get_chat_name(update.effective_chat)
         date = update.message.date
@@ -61,11 +77,39 @@ class Bot:
         return session
 
     def stop(self, update: Update, context: CallbackContext):
+        """Stop a session for the given user.
+
+        Args:
+            update (Update): Incomming update.
+            context (CallbackContext): Context of the update.
+        """
         username = handle_stop(update, context, self.workers_in_chats)
         self.wait_stop_comment[username] = True
 
     def data_menu(self, update: Update, context: CallbackContext):
-        return data_menu(update, context)
+        """Display the data menu.
+
+        Args:
+            update (Update): Incomming update.
+            context (CallbackContext): Context of the update.
+
+        """
+        user = update.effective_user
+        buttons = [
+            [InlineKeyboardButton(ISWORKING, callback_data=ISWORKING)],
+            [InlineKeyboardButton(SUMMARY, callback_data=SUMMARY)],
+        ]
+        if not try_delete_message(
+            context.bot, update.effective_chat, update.message.message_id,
+        ):
+            return
+
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f"What do you want to do {get_user_name(user)}?",
+            reply_markup=InlineKeyboardMarkup(buttons),
+        )
+
 
     def load_task(self, update: Update, context: CallbackContext):
         author = get_user_name(update.effective_user)

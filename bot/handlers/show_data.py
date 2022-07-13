@@ -1,34 +1,14 @@
 from typing import Dict
-from telegram import Chat, InlineKeyboardButton, InlineKeyboardMarkup, Update, User
+from telegram import Chat, Update
 from telegram.ext import CallbackContext
 
-from bot import ISWORKING, SUMMARY
+
 from bot.abc import Session
 from bot.handlers.utils import (
     get_chat_name,
-    get_user_name,
     pretty_time_delta,
-    try_delete_message,
 )
 from bot.database import get_summary
-
-
-def data_menu(update: Update, context: CallbackContext):
-    user = update.effective_user
-    buttons = [
-        [InlineKeyboardButton(ISWORKING, callback_data=ISWORKING)],
-        [InlineKeyboardButton(SUMMARY, callback_data=SUMMARY)],
-    ]
-    if not try_delete_message(
-        context.bot, update.effective_chat, update.message.message_id
-    ):
-        return
-
-    context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=f"What do you want to do {get_user_name(user)}?",
-        reply_markup=InlineKeyboardMarkup(buttons),
-    )
 
 
 def handle_is_working(
