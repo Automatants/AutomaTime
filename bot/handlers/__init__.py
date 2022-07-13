@@ -26,8 +26,8 @@ class Bot:
         create_database(db_path)
         self.workers_in_chats: Dict[Chat, Dict[str, Session]] = {}
         self.current_tasks_dict: dict = None
-        self.wait_start_comment: str = None
-        self.wait_stop_comment: str = None
+        self.wait_start_comment: Dict[str, bool] = {}
+        self.wait_stop_comment: Dict[str, bool] = {}
         self.wait_tasks: str = None
 
     def start(self, update: Update, context: CallbackContext):
@@ -39,7 +39,7 @@ class Bot:
         if task_dict is not None:
             self.current_tasks_dict = task_dict
         if username is not None:
-            self.wait_start_comment = username
+            self.wait_start_comment[username] = True
 
     def start_session(
         self,
@@ -61,7 +61,8 @@ class Bot:
         return session
 
     def stop(self, update: Update, context: CallbackContext):
-        self.wait_stop_comment = handle_stop(update, context, self.workers_in_chats)
+        username = handle_stop(update, context, self.workers_in_chats)
+        self.wait_stop_comment[username] = True
 
     def data_menu(self, update: Update, context: CallbackContext):
         return data_menu(update, context)
@@ -74,13 +75,13 @@ class Bot:
     def textHandler(self, update: Update, context: CallbackContext):
         text: str = update.message.text
         author = get_user_name(update.effective_user)
-        if self.wait_start_comment is not None and author == self.wait_start_comment:
+        if author in self.wait_start_comment and self.wait_start_comment[author]:
             session = self.start_session(update, context, text)
-            self.wait_start_comment = None
+            self.wait_start_comment[author] = False
             self.current_tasks_dict = None
             return send_session_start(update, context, session)
-        if self.wait_stop_comment is not None and author == self.wait_stop_comment:
-            self.wait_stop_comment = None
+        if author in self.wait_stop_comment and self.wait_stop_comment[author]:
+            self.wait_stop_comment[author] = False
             return send_session_stop(update, context, self.db_path, self.workers_in_chats)
 
     def yamlHandler(self,  update: Update, context: CallbackContext):
@@ -96,7 +97,7 @@ class Bot:
                 update, context, self.current_tasks_dict
             )
             if username is not None:
-                self.wait_start_comment = username
+                self.wait_start_comment[username] = True
             return
         if text == ISWORKING:
             return handle_is_working(update, context, self.workers_in_chats)
