@@ -1,4 +1,7 @@
+import os
 import logging
+from dotenv import load_dotenv
+
 from telegram.ext import (
     Updater,
     CommandHandler,
@@ -13,9 +16,11 @@ from bot.logging import init_logger
 if __name__ == "__main__":
     init_logger(logging.INFO, __package__)
 
-    key_path = ".key"
-    with open(key_path, "r", encoding="utf-8") as key_file:
-        key = key_file.readline()
+    dotenv_path = '.env'
+    if os.path.isfile(dotenv_path):
+        load_dotenv(dotenv_path)
+
+    key = os.environ.get("BOT_KEY")
 
     updater = Updater(key)
     dispatcher = updater.dispatcher
