@@ -28,9 +28,9 @@ class Bot:
         self.current_tasks_dict: dict = None
         self.wait_start_comment: Dict[str, bool] = {}
         self.wait_stop_comment: Dict[str, bool] = {}
-        self.wait_tasks: str = None
+        self.wait_tasks: Dict[str, bool] = {}
 
-    def start(self, update: Update, context: CallbackContext):
+    def start(self, update: Update, context: CallbackContext) -> None:
         """Let a user start a task.
 
         Args:
@@ -76,7 +76,7 @@ class Bot:
         self.workers_in_chats[chat][author] = session
         return session
 
-    def stop(self, update: Update, context: CallbackContext):
+    def stop(self, update: Update, context: CallbackContext) -> None:
         """Stop a session for the given user.
 
         Args:
@@ -86,7 +86,7 @@ class Bot:
         username = handle_stop(update, context, self.workers_in_chats)
         self.wait_stop_comment[username] = True
 
-    def data_menu(self, update: Update, context: CallbackContext):
+    def data_menu(self, update: Update, context: CallbackContext) -> None:
         """Display the data menu.
 
         Args:
@@ -111,30 +111,57 @@ class Bot:
         )
 
 
-    def load_task(self, update: Update, context: CallbackContext):
+    def load_task(self, update: Update, context: CallbackContext) -> None:
+        """Load a tasks yaml file.
+
+        Args:
+            update (Update): Incomming update.
+            context (CallbackContext): Context of the update.
+
+        """
         author = get_user_name(update.effective_user)
-        self.wait_tasks = author
-        return handle_load_task(update, context)
+        self.wait_tasks[author] = True
+        handle_load_task(update, context)
 
     def textHandler(self, update: Update, context: CallbackContext):
+        """Handle a text input.
+
+        Args:
+            update (Update): Incomming update.
+            context (CallbackContext): Context of the update.
+
+        """
         text: str = update.message.text
         author = get_user_name(update.effective_user)
         if author in self.wait_start_comment and self.wait_start_comment[author]:
             session = self.start_session(update, context, text)
             self.wait_start_comment[author] = False
             self.current_tasks_dict = None
-            return send_session_start(update, context, session)
+            send_session_start(update, context, session)
         if author in self.wait_stop_comment and self.wait_stop_comment[author]:
             self.wait_stop_comment[author] = False
-            return send_session_stop(update, context, self.db_path, self.workers_in_chats)
+            send_session_stop(update, context, self.db_path, self.workers_in_chats)
 
     def yamlHandler(self,  update: Update, context: CallbackContext):
+        """Handle a yaml file input.
+
+        Args:
+            update (Update): Incomming update.
+            context (CallbackContext): Context of the update.
+
+        """
         author = get_user_name(update.effective_user)
-        if self.wait_tasks is not None and author == self.wait_tasks:
-            self.wait_tasks = None
-            return store_task(update, context, self.db_path)
+        if author in self.wait_tasks and self.wait_tasks[author]:
+            self.wait_tasks[author] = False
+            store_task(update, context, self.db_path)
 
     def queryHandler(self, update: Update, context: CallbackContext):
+        """Handle queries inputs.
+
+        Args:
+            update (Update): Incomming update.
+            context (CallbackContext): Context of the update.
+        """
         text: str = update.callback_query.data
         if isinstance(self.current_tasks_dict, dict):
             self.current_tasks_dict, username = handle_current_tasks_dict(
@@ -142,14 +169,19 @@ class Bot:
             )
             if username is not None:
                 self.wait_start_comment[username] = True
-            return
-        if text == ISWORKING:
-            return handle_is_working(update, context, self.workers_in_chats)
-        if text.startswith(SUMMARY):
-            return handle_summary(update, context, self.db_path)
+        elif text == ISWORKING:
+            handle_is_working(update, context, self.workers_in_chats)
+        elif text.startswith(SUMMARY):
+            handle_summary(update, context, self.db_path)
 
     @staticmethod
     def unknown(update: Update, context: CallbackContext):
+        """Handle unknown commands.
+
+        Args:
+            update (Update): Incomming update.
+            context (CallbackContext): Context of the update.
+        """
         context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="Sorry, I didn't understand that command.",
