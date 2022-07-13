@@ -21,6 +21,7 @@ from bot.handlers.show_data import (
 
 
 class Bot:
+    """The global Bot class to handle users interactions."""
     def __init__(self, db_path: str) -> None:
         self.db_path = db_path
         create_database(db_path)
