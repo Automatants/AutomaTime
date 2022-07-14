@@ -1,4 +1,6 @@
-from typing import Dict
+""" Module for work session stop handler. """
+
+from typing import Dict, Optional
 from telegram import Chat, Update
 from telegram.ext import CallbackContext
 
@@ -9,7 +11,6 @@ from bot.handlers.utils import (
     get_chat_name,
     get_user_name,
     pretty_time_delta,
-    session_comment_txt,
     try_delete_message,
 )
 from bot.database import add_complete_session
@@ -42,11 +43,11 @@ def handle_stop(
     update: Update,
     context: CallbackContext,
     workers_in_chats: Dict[Chat, Dict[str, Session]],
-):
+) -> Optional[str]:
     if not try_delete_message(
         context.bot, update.effective_chat, update.message.message_id
     ):
-        return
+        return ""
 
     author = get_user_name(update.effective_user)
     chat = get_chat_name(update.effective_chat)
@@ -54,6 +55,8 @@ def handle_stop(
     if chat in workers_in_chats and author in workers_in_chats[chat]:
         ask_comment(update, context)
         return get_user_name(update.effective_user)
+
+    return ""
 
 
 def send_session_stop(

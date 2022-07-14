@@ -1,3 +1,5 @@
+""" Module for in-chat data visualisation handler """
+
 from typing import Dict
 from telegram import Chat, Update
 from telegram.ext import CallbackContext

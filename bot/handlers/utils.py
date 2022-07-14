@@ -1,6 +1,7 @@
+""" Module for utils functions. """
+
 from typing import List
 from telegram import Bot, Chat, InlineKeyboardButton, InlineKeyboardMarkup, Update, User
-from telegram.ext import CallbackContext
 
 from bot.dataclasses import CompleteSession, Session
 
@@ -25,8 +26,7 @@ def pretty_time_delta(seconds, compact=False):
 def get_chat_name(chat: Chat):
     if chat.type == "private":
         return chat.full_name
-    else:
-        return chat.title
+    return chat.title
 
 
 def get_user_name(user: User):
@@ -61,9 +61,8 @@ def try_delete_message(bot: Bot, chat: Chat, message_id) -> bool:
     ):
         bot.delete_message(chat.id, message_id)
         return True
-    else:
-        bot.send_message(chat.id, "Please allow me to delete messages!")
-        return False
+    bot.send_message(chat.id, "Please allow me to delete messages!")
+    return False
 
 
 def create_reply_markup(options: List[str]):
@@ -78,7 +77,7 @@ def create_reply_markup(options: List[str]):
     return InlineKeyboardMarkup(buttons)
 
 
-def edit_reply_markup(update: Update, context: CallbackContext, options: List[str]):
+def edit_reply_markup(update: Update, options: List[str]):
     text = "Choose a task:"
     call = update.callback_query
     reply_markup = create_reply_markup(options)

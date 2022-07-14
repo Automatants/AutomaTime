@@ -1,4 +1,6 @@
-from typing import Any, Dict, Union
+""" Module for work session start handler. """
+
+from typing import Any, Dict, Tuple, Union
 from telegram import Update
 from telegram.ext import CallbackContext
 
@@ -26,11 +28,13 @@ def start_msg_format(session: Session):
     )
 
 
-def handle_start(update: Update, context: CallbackContext, db_path: str):
+def handle_start(
+    update: Update, context: CallbackContext, db_path: str
+) -> Tuple[dict, str]:
     if not try_delete_message(
         context.bot, update.effective_chat, update.message.message_id
     ):
-        return
+        return {}, ""
 
     tasks_text = get_project_tasks_dict(db_path, get_chat_name(update.effective_chat))
     if tasks_text:
@@ -41,12 +45,12 @@ def handle_start(update: Update, context: CallbackContext, db_path: str):
             chat_id=update.effective_chat.id, text=text, reply_markup=reply_markup
         )
         return tasks_dict, None
-    else:
-        ask_comment(update, context)
-        call = update.callback_query
-        if call is not None:
-            call.delete_message()
-        return None, get_user_name(update.effective_user)
+
+    ask_comment(update, context)
+    call = update.callback_query
+    if call is not None:
+        call.delete_message()
+    return {}, get_user_name(update.effective_user)
 
 
 def send_session_start(
@@ -89,7 +93,7 @@ def handle_current_tasks_dict(
                 break
 
     if isinstance(current_tasks_dict, dict):
-        edit_reply_markup(update, context, list(current_tasks_dict.keys()))
+        edit_reply_markup(update, list(current_tasks_dict.keys()))
         call.answer()
         username = get_user_name(update.effective_user)
     else:

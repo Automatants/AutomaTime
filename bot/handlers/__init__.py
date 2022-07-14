@@ -1,3 +1,5 @@
+""" Module for telegram bot handlers. """
+
 from typing import Dict
 from telegram import Chat, Update, InlineKeyboardButton, InlineKeyboardMarkup, User
 
@@ -44,15 +46,14 @@ class Bot:
             self.workers_in_chats[chat] = {}
 
         task_dict, username = handle_start(update, context, self.db_path)
-        if task_dict is not None:
+        if task_dict:
             self.current_tasks_dict = task_dict
-        if username is not None:
+        if username:
             self.wait_start_comment[username] = True
 
     def start_session(
         self,
         update: Update,
-        context: CallbackContext,
         comment: str,
     ) -> Session:
         """Start a working session for the user that sent the message.
@@ -86,7 +87,8 @@ class Bot:
             context (CallbackContext): Context of the update.
         """
         username = handle_stop(update, context, self.workers_in_chats)
-        self.wait_stop_comment[username] = True
+        if username:
+            self.wait_stop_comment[username] = True
 
     def data_menu(self, update: Update, context: CallbackContext) -> None:
         """Display the data menu.
@@ -137,7 +139,7 @@ class Bot:
         text: str = update.message.text
         author = get_user_name(update.effective_user)
         if author in self.wait_start_comment and self.wait_start_comment[author]:
-            session = self.start_session(update, context, text)
+            session = self.start_session(update, text)
             self.wait_start_comment[author] = False
             self.current_tasks_dict = None
             send_session_start(update, context, session)
