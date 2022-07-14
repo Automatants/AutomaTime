@@ -1,3 +1,5 @@
+""" Main entry point of the bot application. """
+
 import os
 import logging
 from dotenv import load_dotenv

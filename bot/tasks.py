@@ -1,3 +1,5 @@
+""" Module for tasks management. """
+
 from typing import Tuple, Union
 from telegram import File
 import yaml

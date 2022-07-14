@@ -40,7 +40,7 @@ def insert_req(table: str):
             VALUES ({','.join('?'*len(TABLES[table]))});"""
 
 
-SELECT_SUMMARY = f"""SELECT username, SUM(duration)
+SELECT_SUMMARY = """SELECT username, SUM(duration)
     FROM sessions
     WHERE project = ?
     GROUP BY username
@@ -68,7 +68,15 @@ def connect(db_path: str) -> sqlite3.Connection:
     return sqlite3.connect(db_path)
 
 
-def get_columns_desc(columns: dict):
+def get_columns_desc(columns: dict) -> str:
+    """Get the description of all given columns.
+
+    Args:
+        columns (dict): Columns to get the descriptions from.
+
+    Returns:
+        str: Joined description of all elements from all columns.
+    """
     desc_elements = []
     for column_name, column_data in columns.items():
         null_str = "" if column_data["optional"] else " NOT_NULL"
@@ -240,6 +248,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main():
+    """Main database command line interface."""
     parser = build_parser()
     config = parser.parse_args()
 

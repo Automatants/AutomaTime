@@ -1,3 +1,5 @@
+""" Module for tasks loaders handler. """
+
 from telegram import Update
 from telegram.ext import CallbackContext
 
@@ -21,7 +23,8 @@ def store_task(update: Update, context: CallbackContext, db_path: str):
     context.bot.send_message(
         update.effective_chat.id, f"{author} has updated project tasks."
     )
-    LOGGER.info(f"Tasks uploaded on {chat}: {[task for task, _ in tasks]}")
+    tasks_str = str([task for task, _ in tasks])
+    LOGGER.info("Tasks uploaded on %s: %s", chat, tasks_str)
 
 
 def handle_load_task(update: Update, context: CallbackContext):

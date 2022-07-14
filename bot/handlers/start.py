@@ -58,7 +58,7 @@ def send_session_start(
     context.bot.delete_message(update.effective_chat.id, update.message.message_id)
     msg = start_msg_format(session)
     context.bot.send_message(update.effective_chat.id, msg)
-    LOGGER.info(f"Update on {chat}: {msg}")
+    LOGGER.info("Update on %s: %s", chat, msg)
 
 
 def ask_comment(update: Update, context: CallbackContext):

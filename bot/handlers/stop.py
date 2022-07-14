@@ -73,4 +73,4 @@ def send_session_stop(
         msg = stop_msg_format(complete_session)
         context.bot.delete_message(update.effective_chat.id, update.message.message_id)
         context.bot.send_message(chat_id=update.effective_chat.id, text=msg)
-        LOGGER.info(f"Update on {chat}: {msg}")
+        LOGGER.info("Update on %s: %s", chat, msg)
