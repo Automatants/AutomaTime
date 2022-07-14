@@ -14,15 +14,14 @@ def init_logger(log_level: int, package_name: str) -> logging.Logger:
     Returns:
         logging.Logger: Logger for the main package execution.
     """
-    logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(package_name)
     logger.setLevel(log_level)
 
+    stream_handler = CustomHandler(package_name=package_name)
     stream_formater = logging.Formatter(
         "%(asctime)s|%(levelname)s|%(message)s",
         datefmt="%H:%M:%S",
     )
-    stream_handler = CustomHandler(package_name=package_name)
     stream_handler.setFormatter(stream_formater)
     logger.addHandler(stream_handler)
     if log_level <= logging.DEBUG:
