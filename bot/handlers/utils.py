@@ -1,9 +1,14 @@
 """ Module for utils functions. """
 
 from typing import List
-from telegram import Bot, Chat, InlineKeyboardButton, InlineKeyboardMarkup, Update, User
-
-from bot.dataclasses import CompleteSession, Session
+from telegram import (
+    Bot,
+    CallbackQuery,
+    Chat,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    User,
+)
 
 
 def pretty_time_delta(seconds, compact=False):
@@ -33,27 +38,6 @@ def get_user_name(user: User):
     return f"@{user.username}"
 
 
-def session_comment_txt(session: Session):
-    task_txt = ""
-    if session.task and session.start_comment:
-        task_txt = f" on {session.task} ({session.start_comment})"
-    elif session.task is not None:
-        task_txt = f" on {session.task}"
-    elif session.start_comment is not None:
-        task_txt = f" on {session.start_comment}"
-    return task_txt
-
-
-def complete_session_comment_txt(complete_session: CompleteSession):
-    session = complete_session.session
-    task_txt = ""
-    if session.task is not None:
-        task_txt += f" on {session.task}"
-    if complete_session.stop_comment is not None:
-        task_txt += f" ({complete_session.stop_comment})"
-    return task_txt
-
-
 def try_delete_message(bot: Bot, chat: Chat, message_id) -> bool:
     if (
         chat.type == "private"
@@ -77,9 +61,11 @@ def create_reply_markup(options: List[str]):
     return InlineKeyboardMarkup(buttons)
 
 
-def edit_reply_markup(update: Update, options: List[str]):
-    text = "Choose a task:"
-    call = update.callback_query
+def edit_reply_markup(
+    text: str,
+    query: CallbackQuery,
+    options: List[str],
+):
     reply_markup = create_reply_markup(options)
-    call.edit_message_text(text)
-    call.edit_message_reply_markup(reply_markup)
+    query.edit_message_text(text)
+    query.edit_message_reply_markup(reply_markup)

@@ -1,13 +1,13 @@
 """ Module for work session stop handler. """
 
+from datetime import datetime
 from typing import Dict, Optional
-from telegram import Chat, Update
+from telegram import Bot, Chat, Message, Update, User
 from telegram.ext import CallbackContext
 
 from bot import STOP_CODE
 from bot.dataclasses import CompleteSession, Session
 from bot.handlers.utils import (
-    complete_session_comment_txt,
     get_chat_name,
     get_user_name,
     pretty_time_delta,
@@ -17,6 +17,16 @@ from bot.database import add_complete_session
 from bot.logging import get_logger
 
 LOGGER = get_logger(__name__)
+
+
+def complete_session_comment_txt(complete_session: CompleteSession):
+    session = complete_session.session
+    task_txt = ""
+    if session.task is not None:
+        task_txt += f" on {session.task}"
+    if complete_session.stop_comment is not None:
+        task_txt += f" ({complete_session.stop_comment})"
+    return task_txt
 
 
 def stop_msg_format(complete_session: CompleteSession):
@@ -60,20 +70,21 @@ def handle_stop(
 
 
 def send_session_stop(
-    update: Update,
-    context: CallbackContext,
+    user: User,
+    chat: Chat,
+    bot: Bot,
+    message: Message,
     db_path: str,
     workers_in_chats: Dict[Chat, Dict[str, Session]],
 ):
-    author = get_user_name(update.effective_user)
-    chat = get_chat_name(update.effective_chat)
-    date = update.message.date
-    comment = update.message.text
-    if chat in workers_in_chats and author in workers_in_chats[chat]:
-        session = workers_in_chats[chat].pop(author)
-        complete_session = CompleteSession(session, date, comment)
-        add_complete_session(db_path, chat, complete_session)
+    author = get_user_name(user)
+    chat_name = get_chat_name(chat)
+
+    if chat_name in workers_in_chats and author in workers_in_chats[chat_name]:
+        session = workers_in_chats[chat_name].pop(author)
+        complete_session = CompleteSession(session, message.date, message.text)
+        add_complete_session(db_path, chat_name, complete_session)
         msg = stop_msg_format(complete_session)
-        context.bot.delete_message(update.effective_chat.id, update.message.message_id)
-        context.bot.send_message(chat_id=update.effective_chat.id, text=msg)
-        LOGGER.info("Update on %s: %s", chat, msg)
+        bot.delete_message(chat.id, message.message_id)
+        bot.send_message(chat_id=chat.id, text=msg)
+        LOGGER.info("Update on %s: %s", chat_name, msg)

@@ -1,7 +1,14 @@
 """ Module for telegram bot handlers. """
 
 from typing import Dict
-from telegram import Chat, Update, InlineKeyboardButton, InlineKeyboardMarkup, User
+from telegram import (
+    Chat,
+    Message,
+    Update,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    User,
+)
 
 from telegram.ext import CallbackContext
 
@@ -45,7 +52,14 @@ class Bot:
         if chat not in self.workers_in_chats:
             self.workers_in_chats[chat] = {}
 
-        task_dict, username = handle_start(update, context, self.db_path)
+        task_dict, username = handle_start(
+            user=update.effective_user,
+            bot=context.bot,
+            chat=update.effective_chat,
+            message=update.message,
+            query=update.callback_query,
+            db_path=self.db_path,
+        )
         if task_dict:
             self.current_tasks_dict = task_dict
         if username:
@@ -53,8 +67,9 @@ class Bot:
 
     def start_session(
         self,
-        update: Update,
-        comment: str,
+        user: User,
+        chat: Chat,
+        message: Message,
     ) -> Session:
         """Start a working session for the user that sent the message.
 
@@ -66,17 +81,17 @@ class Bot:
         Returns:
             Session: _description_
         """
-        author = get_user_name(update.effective_user)
-        chat = get_chat_name(update.effective_chat)
-        date = update.message.date
+        author = get_user_name(user)
+        chat_name = get_chat_name(chat)
+        date = message.date
 
         task = (
             self.current_tasks_dict
             if isinstance(self.current_tasks_dict, str)
             else None
         )
-        session = Session(author, date, comment, task)
-        self.workers_in_chats[chat][author] = session
+        session = Session(author, date, message.text, task)
+        self.workers_in_chats[chat_name][author] = session
         return session
 
     def stop(self, update: Update, context: CallbackContext) -> None:
@@ -136,16 +151,20 @@ class Bot:
             context (CallbackContext): Context of the update.
 
         """
-        text: str = update.message.text
-        author = get_user_name(update.effective_user)
+        user = update.effective_user
+        chat = update.effective_chat
+        message = update.message
+        author = get_user_name(user)
         if author in self.wait_start_comment and self.wait_start_comment[author]:
-            session = self.start_session(update, text)
+            session = self.start_session(user, chat, message)
             self.wait_start_comment[author] = False
             self.current_tasks_dict = None
-            send_session_start(update, context, session)
+            send_session_start(context.bot, chat, message, session)
         if author in self.wait_stop_comment and self.wait_stop_comment[author]:
             self.wait_stop_comment[author] = False
-            send_session_stop(update, context, self.db_path, self.workers_in_chats)
+            send_session_stop(
+                user, chat, context.bot, message, self.db_path, self.workers_in_chats
+            )
 
     def yamlHandler(self, update: Update, context: CallbackContext):
         """Handle a yaml file input.
@@ -170,7 +189,11 @@ class Bot:
         text: str = update.callback_query.data
         if isinstance(self.current_tasks_dict, dict):
             self.current_tasks_dict, username = handle_current_tasks_dict(
-                update, context, self.current_tasks_dict
+                user=update.effective_user,
+                bot=context.bot,
+                chat=update.effective_chat,
+                query=update.callback_query,
+                current_tasks_dict=self.current_tasks_dict,
             )
             if username is not None:
                 self.wait_start_comment[username] = True

@@ -1,14 +1,13 @@
 """ Module for work session start handler. """
 
 from typing import Any, Dict, Tuple, Union
-from telegram import Update
+from telegram import Bot, CallbackQuery, Chat, Update, Message, User
 from telegram.ext import CallbackContext
 
 from bot import START_CODE
 from bot.dataclasses import Session
 from bot.handlers.utils import (
     create_reply_markup,
-    session_comment_txt,
     get_chat_name,
     try_delete_message,
     get_user_name,
@@ -22,6 +21,17 @@ from bot.logging import get_logger
 LOGGER = get_logger(__name__)
 
 
+def session_comment_txt(session: Session):
+    task_txt = ""
+    if session.task and session.start_comment:
+        task_txt = f" on {session.task} ({session.start_comment})"
+    elif session.task is not None:
+        task_txt = f" on {session.task}"
+    elif session.start_comment is not None:
+        task_txt = f" on {session.start_comment}"
+    return task_txt
+
+
 def start_msg_format(session: Session):
     return (
         f"{START_CODE} {session.author} started working{session_comment_txt(session)}"
@@ -29,59 +39,60 @@ def start_msg_format(session: Session):
 
 
 def handle_start(
-    update: Update, context: CallbackContext, db_path: str
+    user: User,
+    bot: Bot,
+    chat: Chat,
+    message: Message,
+    query: CallbackQuery,
+    db_path: str,
 ) -> Tuple[dict, str]:
-    if not try_delete_message(
-        context.bot, update.effective_chat, update.message.message_id
-    ):
+
+    if not try_delete_message(bot, chat, message.message_id):
         return {}, ""
 
-    tasks_text = get_project_tasks_dict(db_path, get_chat_name(update.effective_chat))
+    tasks_text = get_project_tasks_dict(db_path, get_chat_name(chat))
     if tasks_text:
         _, tasks_dict = read_tasks(tasks_text[0][0])
         reply_markup = create_reply_markup(list(tasks_dict.keys()))
         text = "Choose a task:"
-        context.bot.send_message(
-            chat_id=update.effective_chat.id, text=text, reply_markup=reply_markup
-        )
+        bot.send_message(chat_id=chat.id, text=text, reply_markup=reply_markup)
         return tasks_dict, None
 
-    ask_comment(update, context)
-    call = update.callback_query
-    if call is not None:
-        call.delete_message()
-    return {}, get_user_name(update.effective_user)
+    ask_comment(user, bot, chat, query)
+    if query is not None:
+        query.delete_message()
+    return {}, get_user_name(user)
 
 
 def send_session_start(
-    update: Update,
-    context: CallbackContext,
+    bot: Bot,
+    chat: Chat,
+    message: Message,
     session: Session,
 ):
-    chat = get_chat_name(update.effective_chat)
-    context.bot.delete_message(update.effective_chat.id, update.message.message_id)
+    chat_name = get_chat_name(chat)
+    bot.delete_message(chat, message.message_id)
     msg = start_msg_format(session)
-    context.bot.send_message(update.effective_chat.id, msg)
-    LOGGER.info("Update on %s: %s", chat, msg)
+    bot.send_message(chat, msg)
+    LOGGER.info("Update on %s: %s", chat_name, msg)
 
 
-def ask_comment(update: Update, context: CallbackContext):
-    author = get_user_name(update.effective_user)
-    call = update.callback_query
-    msg = f"Please {author} comment what you will work on."
-    if call is not None:
-        call.answer(text=msg)
+def ask_comment(user: User, bot: Bot, chat: Chat, query: CallbackQuery):
+    msg = f"Please {get_user_name(user)} comment what you will work on."
+    if query is not None:
+        query.answer(text=msg)
     else:
-        context.bot.send_message(update.effective_chat.id, msg)
+        bot.send_message(chat.id, msg)
 
 
 def handle_current_tasks_dict(
-    update: Update,
-    context: CallbackContext,
+    user: User,
+    bot: Bot,
+    chat: Chat,
+    query: CallbackQuery,
     current_tasks_dict: Dict[str, Union[dict, Any]],
 ):
-    call = update.callback_query
-    data = call.data
+    data = query.data
 
     try:
         current_tasks_dict = current_tasks_dict[data]
@@ -93,12 +104,12 @@ def handle_current_tasks_dict(
                 break
 
     if isinstance(current_tasks_dict, dict):
-        edit_reply_markup(update, list(current_tasks_dict.keys()))
-        call.answer()
-        username = get_user_name(update.effective_user)
+        edit_reply_markup("Choose a task:", query, list(current_tasks_dict.keys()))
+        query.answer()
+        username = get_user_name(user)
     else:
         current_tasks_dict = data
-        ask_comment(update, context)
+        ask_comment(user, bot, chat, query)
         username = None
-        call.delete_message()
+        query.delete_message()
     return current_tasks_dict, username
