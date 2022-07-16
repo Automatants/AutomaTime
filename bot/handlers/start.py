@@ -85,6 +85,16 @@ def ask_comment(user: User, bot: Bot, chat: Chat, query: CallbackQuery):
         bot.send_message(chat.id, msg)
 
 
+def _get_next_layer(current_tasks_dict: Dict[str, Union[dict, Any]], data: str):
+    if data in current_tasks_dict:
+        return current_tasks_dict[data], data
+    for key in current_tasks_dict:
+        if key.startswith(data):
+            current_tasks_dict = current_tasks_dict[key]
+            return current_tasks_dict[key], key
+    raise KeyError(f"{data} not found in current_tasks_dict")
+
+
 def handle_current_tasks_dict(
     user: User,
     bot: Bot,
@@ -92,23 +102,14 @@ def handle_current_tasks_dict(
     query: CallbackQuery,
     current_tasks_dict: Dict[str, Union[dict, Any]],
 ):
-    data = query.data
-
-    try:
-        current_tasks_dict = current_tasks_dict[data]
-    except KeyError:
-        for key in current_tasks_dict:
-            if key.startswith(data):
-                current_tasks_dict = current_tasks_dict[key]
-                data = key
-                break
+    current_tasks_dict, key = _get_next_layer(current_tasks_dict, query.data)
 
     if isinstance(current_tasks_dict, dict):
         edit_reply_markup("Choose a task:", query, list(current_tasks_dict.keys()))
         query.answer()
         username = get_user_name(user)
     else:
-        current_tasks_dict = data
+        current_tasks_dict = key
         ask_comment(user, bot, chat, query)
         username = None
         query.delete_message()
