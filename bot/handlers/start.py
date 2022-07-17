@@ -1,8 +1,7 @@
 """ Module for work session start handler. """
 
 from typing import Any, Dict, Tuple, Union
-from telegram import Bot, CallbackQuery, Chat, Update, Message, User
-from telegram.ext import CallbackContext
+from telegram import Bot, CallbackQuery, Chat, Message, User
 
 from bot import START_CODE
 from bot.dataclasses import Session
@@ -21,21 +20,29 @@ from bot.logging import get_logger
 LOGGER = get_logger(__name__)
 
 
-def session_comment_txt(session: Session):
-    task_txt = ""
+def session_comment_txt(session: Session) -> str:
+    """Generate a start message for the given session.
+
+    Args:
+        session (Session): Session to generate the message from.
+
+    Returns:
+        str: Generated starting message for the Session.
+    """
+    task_txt = f"{session.author} started working"
+    if not (session.task or session.start_comment):
+        return task_txt
+
+    start_comment = session.start_comment
     if session.task and session.start_comment:
-        task_txt = f" on {session.task} ({session.start_comment})"
-    elif session.task is not None:
-        task_txt = f" on {session.task}"
-    elif session.start_comment is not None:
-        task_txt = f" on {session.start_comment}"
-    return task_txt
+        start_comment = f"({session.start_comment})"
+
+    suffix_parts = [s for s in (" on", session.task, start_comment) if s is not None]
+    return task_txt + " ".join(suffix_parts)
 
 
 def start_msg_format(session: Session):
-    return (
-        f"{START_CODE} {session.author} started working{session_comment_txt(session)}"
-    )
+    return f"{START_CODE} {session_comment_txt(session)}"
 
 
 def handle_start(
@@ -54,8 +61,11 @@ def handle_start(
     if tasks_text:
         _, tasks_dict = read_tasks(tasks_text[0][0])
         reply_markup = create_reply_markup(list(tasks_dict.keys()))
-        text = "Choose a task:"
-        bot.send_message(chat_id=chat.id, text=text, reply_markup=reply_markup)
+        bot.send_message(
+            chat_id=chat.id,
+            text="Choose a task:",
+            reply_markup=reply_markup,
+        )
         return tasks_dict, None
 
     ask_comment(user, bot, chat, query)
@@ -85,7 +95,7 @@ def ask_comment(user: User, bot: Bot, chat: Chat, query: CallbackQuery):
         bot.send_message(chat.id, msg)
 
 
-def _get_next_layer(current_tasks_dict: Dict[str, Union[dict, Any]], data: str):
+def _get_next_task_layer(current_tasks_dict: Dict[str, Union[dict, Any]], data: str):
     if data in current_tasks_dict:
         return current_tasks_dict[data], data
     for key in current_tasks_dict:
@@ -102,7 +112,7 @@ def handle_current_tasks_dict(
     query: CallbackQuery,
     current_tasks_dict: Dict[str, Union[dict, Any]],
 ):
-    current_tasks_dict, key = _get_next_layer(current_tasks_dict, query.data)
+    current_tasks_dict, key = _get_next_task_layer(current_tasks_dict, query.data)
 
     if isinstance(current_tasks_dict, dict):
         edit_reply_markup("Choose a task:", query, list(current_tasks_dict.keys()))
