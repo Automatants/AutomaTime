@@ -82,9 +82,9 @@ def send_session_start(
     session: Session,
 ):
     chat_name = get_chat_name(chat)
-    bot.delete_message(chat, message.message_id)
+    bot.delete_message(chat.id, message.message_id)
     msg = start_msg_format(session)
-    bot.send_message(chat, msg)
+    bot.send_message(chat.id, msg)
     LOGGER.info("Update on %s: %s", chat_name, msg)
 
 
