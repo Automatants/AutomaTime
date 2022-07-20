@@ -1,7 +1,5 @@
 """ Module for work session start handler. """
 
-from hypothesis import given
-from hypothesis.strategies import datetimes
 import pytest_check as check
 from pytest_mock import MockerFixture
 
