@@ -1,4 +1,4 @@
-"""AutomaTime telegram bot"""
+"""Timer telegram bot"""
 
 from bot.dataclasses import Session, CompleteSession
 

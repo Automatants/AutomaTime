@@ -13,5 +13,5 @@ pip install -r requirements.txt
 Run the bot:
 
 ```bash
-python -m automatimebot
+python -m bot
 ```

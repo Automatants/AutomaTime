@@ -232,8 +232,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--path",
         "-p",
-        help="Path to the database. Default to automatime.db",
-        default="automatime.db",
+        help="Path to the database. Default to timerbot.db",
+        default="timerbot.db",
     )
     parser.add_argument(
         "--dump-path",
