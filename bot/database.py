@@ -9,6 +9,7 @@ from typing import List, Tuple
 import pandas as pd
 
 from bot import CompleteSession
+from bot.tasks import parse_tasks
 
 TABLES = {
     "sessions": {
@@ -122,9 +123,7 @@ def add_complete_session(db_path: str, project: str, complete_task: CompleteSess
         )
 
 
-def add_tasks(
-    db_path: str, project: str, tasks: List[Tuple[str, float]], tasks_dict: dict
-):
+def add_tasks(db_path: str, project: str, tasks: dict):
     """Add tasks to the database.
 
     Args:
@@ -133,11 +132,12 @@ def add_tasks(
         tasks (List[Tuple[str, float]]): List of tasks and their estimated times.
         tasks_dict (dict): Dictionary of the structure of tasks.
     """
+    tasks_list = parse_tasks(tasks)
     with connect(db_path) as db:
         db.execute(DELETE_TASKS_FROM_PROJECT, (project,))
         db.execute(DELETE_PROJECT, (project,))
-        db.execute(insert_req("projects"), (project, str(tasks_dict)))
-        for task_name, workload in tasks:
+        db.execute(insert_req("projects"), (project, str(tasks)))
+        for task_name, workload in tasks_list:
             db.execute(insert_req("tasks"), (task_name, project, workload))
 
 

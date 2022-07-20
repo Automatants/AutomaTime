@@ -1,6 +1,5 @@
 """ Module for work session stop handler. """
 
-from datetime import datetime
 from typing import Dict, Optional
 from telegram import Bot, Chat, Message, Update, User
 from telegram.ext import CallbackContext
