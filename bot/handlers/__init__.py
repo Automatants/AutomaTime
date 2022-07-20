@@ -36,7 +36,7 @@ class BotHandler:
         self.db_path = db_path
         create_database(db_path)
         self.workers_in_chats: Dict[Chat, Dict[str, Session]] = {}
-        self.current_tasks_dict: dict = None
+        self.current_tasks_dict: Dict[Chat, dict] = {}
         self.wait_start_comment: Dict[str, bool] = {}
         self.wait_stop_comment: Dict[str, bool] = {}
         self.wait_tasks: Dict[str, bool] = {}
@@ -62,7 +62,7 @@ class BotHandler:
             db_path=self.db_path,
         )
         if task_dict:
-            self.current_tasks_dict = task_dict
+            self.current_tasks_dict[chat] = task_dict
 
     def start_session(
         self,
@@ -85,8 +85,9 @@ class BotHandler:
         date = message.date
 
         task = (
-            self.current_tasks_dict
-            if isinstance(self.current_tasks_dict, str)
+            self.current_tasks_dict[chat_name]
+            if chat_name in self.current_tasks_dict
+            and isinstance(self.current_tasks_dict[chat_name], str)
             else None
         )
         session = Session(author, date, message.text, task)
@@ -154,10 +155,12 @@ class BotHandler:
         chat = update.effective_chat
         message = update.message
         author = get_user_name(user)
+        chat_name = get_chat_name(chat)
         if author in self.wait_start_comment and self.wait_start_comment[author]:
             session = self.start_session(user, chat, message)
             self.wait_start_comment[author] = False
-            self.current_tasks_dict = None
+            if chat_name in self.current_tasks_dict:
+                self.current_tasks_dict.pop(chat_name)
             send_session_start(context.bot, chat, message, session)
         if author in self.wait_stop_comment and self.wait_stop_comment[author]:
             self.wait_stop_comment[author] = False
@@ -187,14 +190,16 @@ class BotHandler:
         """
         text: str = update.callback_query.data
         user: User = update.effective_user
-        if isinstance(self.current_tasks_dict, dict):
-            self.current_tasks_dict = handle_current_tasks_dict(
+        chat_name = get_chat_name(update.effective_chat)
+        if chat_name in self.current_tasks_dict:
+            chat_tasks = self.current_tasks_dict[chat_name]
+            self.current_tasks_dict[chat_name] = handle_current_tasks_dict(
                 bot_handler=self,
                 user=user,
                 bot=context.bot,
                 chat=update.effective_chat,
                 query=update.callback_query,
-                current_tasks_dict=self.current_tasks_dict,
+                current_tasks_dict=chat_tasks,
             )
         elif text == ISWORKING:
             handle_is_working(update, context, self.workers_in_chats)
