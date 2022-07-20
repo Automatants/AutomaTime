@@ -9,7 +9,7 @@ from typing import List, Tuple
 import pandas as pd
 
 from bot import CompleteSession
-from bot.tasks import parse_tasks
+from bot.tasks import parse_tasks, read_tasks
 
 TABLES = {
     "sessions": {
@@ -167,7 +167,10 @@ def get_project_tasks_dict(db_path: str, project: str) -> dict:
         dict: Structure of tasks of the given project.
     """
     with connect(db_path) as db:
-        return db.execute(SELECT_TASKS_DICT, (project,)).fetchall()
+        tasks_text = db.execute(SELECT_TASKS_DICT, (project,)).fetchall()
+        if tasks_text:
+            return read_tasks(tasks_text[0][0])
+    return {}
 
 
 def get_all(db_path: str, table) -> pd.DataFrame:

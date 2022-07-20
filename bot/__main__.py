@@ -12,7 +12,7 @@ from telegram.ext import (
     CallbackQueryHandler,
 )
 
-from bot.handlers import Bot
+from bot.handlers import BotHandler
 from bot.logging import init_logger
 
 if __name__ == "__main__":
@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     updater = Updater(key)
     dispatcher = updater.dispatcher
-    bot = Bot(db_path="timerbot.db")
+    bot = BotHandler(db_path="timerbot.db")
 
     handlers = (
         CommandHandler("start", bot.start),

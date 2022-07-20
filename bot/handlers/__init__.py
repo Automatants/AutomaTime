@@ -29,7 +29,7 @@ from bot.handlers.show_data import (
 )
 
 
-class Bot:
+class BotHandler:
     """The global Bot class to handle users interactions."""
 
     def __init__(self, db_path: str) -> None:
@@ -52,7 +52,8 @@ class Bot:
         if chat not in self.workers_in_chats:
             self.workers_in_chats[chat] = {}
 
-        task_dict, username = handle_start(
+        task_dict = handle_start(
+            bot_handler=self,
             user=update.effective_user,
             bot=context.bot,
             chat=update.effective_chat,
@@ -62,8 +63,6 @@ class Bot:
         )
         if task_dict:
             self.current_tasks_dict = task_dict
-        if username:
-            self.wait_start_comment[username] = True
 
     def start_session(
         self,
@@ -187,16 +186,16 @@ class Bot:
             context (CallbackContext): Context of the update.
         """
         text: str = update.callback_query.data
+        user: User = update.effective_user
         if isinstance(self.current_tasks_dict, dict):
-            self.current_tasks_dict, username = handle_current_tasks_dict(
-                user=update.effective_user,
+            self.current_tasks_dict = handle_current_tasks_dict(
+                bot_handler=self,
+                user=user,
                 bot=context.bot,
                 chat=update.effective_chat,
                 query=update.callback_query,
                 current_tasks_dict=self.current_tasks_dict,
             )
-            if username is not None:
-                self.wait_start_comment[username] = True
         elif text == ISWORKING:
             handle_is_working(update, context, self.workers_in_chats)
         elif text.startswith(SUMMARY):

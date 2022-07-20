@@ -1,21 +1,23 @@
 """ Module for work session start handler. """
 
-from typing import Any, Dict, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Tuple, Union
 from telegram import Bot, CallbackQuery, Chat, Message, User
 
 from bot import START_CODE
 from bot.dataclasses import Session
 from bot.handlers.utils import (
+    ask_comment,
     create_reply_markup,
     get_chat_name,
     try_delete_message,
     get_user_name,
     edit_reply_markup,
 )
-from bot.tasks import read_tasks
 from bot.database import get_project_tasks_dict
 from bot.logging import get_logger
 
+if TYPE_CHECKING:
+    from bot.handlers import BotHandler
 
 LOGGER = get_logger(__name__)
 
@@ -46,6 +48,7 @@ def start_msg_format(session: Session):
 
 
 def handle_start(
+    bot_handler: "BotHandler",
     user: User,
     bot: Bot,
     chat: Chat,
@@ -57,9 +60,8 @@ def handle_start(
     if not try_delete_message(bot, chat, message.message_id):
         return {}, ""
 
-    tasks_text = get_project_tasks_dict(db_path, get_chat_name(chat))
-    if tasks_text:
-        _, tasks_dict = read_tasks(tasks_text[0][0])
+    tasks_dict = get_project_tasks_dict(db_path, get_chat_name(chat))
+    if tasks_dict:
         reply_markup = create_reply_markup(list(tasks_dict.keys()))
         bot.send_message(
             chat_id=chat.id,
@@ -68,7 +70,7 @@ def handle_start(
         )
         return tasks_dict, None
 
-    ask_comment(user, bot, chat, query)
+    ask_comment(bot_handler, user, bot, chat, query)
     if query is not None:
         query.delete_message()
     return {}, get_user_name(user)
@@ -87,14 +89,6 @@ def send_session_start(
     LOGGER.info("Update on %s: %s", chat_name, msg)
 
 
-def ask_comment(user: User, bot: Bot, chat: Chat, query: CallbackQuery):
-    msg = f"Please {get_user_name(user)} comment what you will work on."
-    if query is not None:
-        query.answer(text=msg)
-    else:
-        bot.send_message(chat.id, msg)
-
-
 def _get_next_task_layer(current_tasks_dict: Dict[str, Union[dict, Any]], data: str):
     if data in current_tasks_dict:
         return current_tasks_dict[data], data
@@ -106,6 +100,7 @@ def _get_next_task_layer(current_tasks_dict: Dict[str, Union[dict, Any]], data: 
 
 
 def handle_current_tasks_dict(
+    bot_handler: "BotHandler",
     user: User,
     bot: Bot,
     chat: Chat,
@@ -117,10 +112,8 @@ def handle_current_tasks_dict(
     if isinstance(current_tasks_dict, dict):
         edit_reply_markup("Choose a task:", query, list(current_tasks_dict.keys()))
         query.answer()
-        username = get_user_name(user)
     else:
         current_tasks_dict = key
-        ask_comment(user, bot, chat, query)
-        username = None
+        ask_comment(bot_handler, user, bot, chat, query)
         query.delete_message()
-    return current_tasks_dict, username
+    return current_tasks_dict

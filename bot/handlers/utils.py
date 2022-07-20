@@ -1,6 +1,6 @@
 """ Module for utils functions. """
 
-from typing import List
+from typing import TYPE_CHECKING, List
 from telegram import (
     Bot,
     CallbackQuery,
@@ -9,6 +9,9 @@ from telegram import (
     InlineKeyboardMarkup,
     User,
 )
+
+if TYPE_CHECKING:
+    from bot.handlers import BotHandler as BotHandler
 
 
 def pretty_time_delta(seconds, compact=False):
@@ -69,3 +72,15 @@ def edit_reply_markup(
     reply_markup = create_reply_markup(options)
     query.edit_message_text(text)
     query.edit_message_reply_markup(reply_markup)
+
+
+def ask_comment(
+    bot_handler: "BotHandler", user: User, bot: Bot, chat: Chat, query: CallbackQuery
+):
+    username = get_user_name(user)
+    msg = f"Please {username} comment what you will work on."
+    if query is not None:
+        query.answer(text=msg)
+    else:
+        bot.send_message(chat.id, msg)
+    bot_handler.wait_start_comment[username] = True
