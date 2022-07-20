@@ -10,7 +10,6 @@ from bot.handlers.utils import (
     create_reply_markup,
     get_chat_name,
     try_delete_message,
-    get_user_name,
     edit_reply_markup,
 )
 from bot.database import get_project_tasks_dict
@@ -68,12 +67,12 @@ def handle_start(
             text="Choose a task:",
             reply_markup=reply_markup,
         )
-        return tasks_dict, None
+        return tasks_dict
 
     ask_comment(bot_handler, user, bot, chat, query)
     if query is not None:
         query.delete_message()
-    return {}, get_user_name(user)
+    return {}
 
 
 def send_session_start(
