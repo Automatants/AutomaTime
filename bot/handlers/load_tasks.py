@@ -4,7 +4,7 @@ from telegram import Update
 from telegram.ext import CallbackContext
 
 from bot.handlers.utils import get_chat_name, get_user_name
-from bot.tasks import read_tasks
+from bot.tasks import parse_tasks, read_tasks
 from bot.database import add_tasks
 from bot.logging import get_logger
 
@@ -23,7 +23,7 @@ def store_task(update: Update, context: CallbackContext, db_path: str):
     context.bot.send_message(
         update.effective_chat.id, f"{author} has updated project tasks."
     )
-    tasks_str = str([task for task, _ in tasks])
+    tasks_str = str([task for task, _ in parse_tasks(tasks)])
     LOGGER.info("Tasks uploaded on %s: %s", chat, tasks_str)
 
 

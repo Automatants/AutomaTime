@@ -1,6 +1,6 @@
 """ Module for tasks management. """
 
-from typing import Tuple, Union
+from typing import List, Tuple, Union
 from telegram import File
 import yaml
 
@@ -22,7 +22,7 @@ def read_tasks(file: Union[str, File]) -> Tuple[list, dict]:
     return tasks
 
 
-def parse_tasks(tasks_dicts: dict, tasks: list = None) -> list:
+def parse_tasks(tasks_dicts: dict, tasks: list = None) -> List[Tuple[str, float]]:
     """Parse all tasks from a structure of tasks as a dict.
 
     Args:
