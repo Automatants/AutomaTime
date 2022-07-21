@@ -4,3 +4,4 @@ colorama
 pandas
 pyyaml
 openpyxl
+plotly
