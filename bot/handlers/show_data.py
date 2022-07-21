@@ -4,7 +4,7 @@ from datetime import timedelta
 import os
 from typing import Dict
 import plotly
-from telegram import Bot, Chat, Update
+from telegram import Bot, CallbackQuery, Chat, Update
 from telegram.ext import CallbackContext
 
 
@@ -92,7 +92,13 @@ def plot_gantt(sessions_df: pd.DataFrame) -> plotly.graph_objs.Figure:
     return fig
 
 
-def send_gantt(bot: Bot, chat: Chat, db_path: str, tmp_path="tmp_gantt.html"):
+def send_gantt(
+    bot: Bot,
+    chat: Chat,
+    query: CallbackQuery,
+    db_path: str,
+    tmp_path="tmp_gantt.html",
+):
     sessions_df = get_all(db_path, "sessions")
     fig = plot_gantt(sessions_df)
     fig.write_html(tmp_path)
@@ -101,3 +107,5 @@ def send_gantt(bot: Bot, chat: Chat, db_path: str, tmp_path="tmp_gantt.html"):
         bot.send_document(chat_id=chat.id, document=tmp_file)
 
     os.remove(tmp_path)
+    query.answer()
+    query.delete_message()

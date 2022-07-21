@@ -208,7 +208,13 @@ class BotHandler:
         elif text.startswith(SUMMARY):
             handle_summary(update, context, self.db_path)
         elif text == TIMELINE:
-            send_gantt(context.bot, update.effective_chat, self.db_path)
+            send_gantt(
+                context.bot,
+                update.effective_chat,
+                update.callback_query,
+                self.db_path,
+                tmp_path=f"{chat_name.capitalize()}_timeline.html",
+            )
 
     @staticmethod
     def unknown(update: Update, context: CallbackContext):
