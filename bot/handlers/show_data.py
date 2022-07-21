@@ -100,4 +100,4 @@ def send_gantt(bot: Bot, chat: Chat, db_path: str, tmp_path="tmp_gantt.html"):
     with open(tmp_path, "rb") as tmp_file:
         bot.send_document(chat_id=chat.id, document=tmp_file)
 
-    os.remove(tmp_file)
+    os.remove(tmp_path)
