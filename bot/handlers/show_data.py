@@ -99,6 +99,6 @@ def send_gantt(bot: Bot, chat: Chat, db_path: str, tmp_path="tmp_gantt.html"):
     fig.write_html(tmp_path)
 
     with open(tmp_path, "rb") as tmp_file:
-        bot.send_photo(chat_id=chat.id, photo=tmp_file)
+        bot.send_document(chat_id=chat.id, document=tmp_file)
 
     os.remove(tmp_file)
