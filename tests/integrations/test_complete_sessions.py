@@ -1,6 +1,5 @@
 """ Test for starting a work session from the user perspective. """
 
-import pytest
 import pytest_check as check
 from pytest_mock import MockerFixture
 
@@ -10,23 +9,7 @@ from bot.dataclasses import CompleteSession
 
 from bot.handlers import BotHandler
 from bot.handlers.utils import get_chat_name, get_user_name
-
-
-@pytest.fixture
-def bot(mocker: MockerFixture, tmpdir):
-    mocker.patch("bot.handlers.send_session_start")
-    db_path = tmpdir.mkdir("sub").join("tmp.db")
-    return BotHandler(db_path)
-
-
-@pytest.fixture
-def user():
-    return User(0, "user0", is_bot=False, username="user0")
-
-
-@pytest.fixture
-def chat():
-    return Chat(0, "supergroup", title="SuperGroupChat")
+from tests import bot, user0 as user, chat  # pylint: disable=unused-import
 
 
 def test_complete_session_without_tasks(
