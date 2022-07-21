@@ -76,9 +76,8 @@ def plot_gantt(sessions_df: pd.DataFrame) -> plotly.graph_objs.Figure:
         sessions_df,
         x_start="Start",
         x_end="Stop",
-        y="Task",
-        color="Username",
-        text="Duration",
+        y="Username",
+        color="Task",
         title="Project timeline",
         hover_data=[
             "Start",
