@@ -118,6 +118,7 @@ class BotHandler:
         buttons = [
             [InlineKeyboardButton(ISWORKING, callback_data=ISWORKING)],
             [InlineKeyboardButton(SUMMARY, callback_data=SUMMARY)],
+            [InlineKeyboardButton(TIMELINE, callback_data=TIMELINE)],
         ]
         if not try_delete_message(
             context.bot,
