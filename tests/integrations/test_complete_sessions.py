@@ -16,20 +16,22 @@ def test_complete_session_without_tasks(
     mocker: MockerFixture, bot: BotHandler, chat: Chat, user: User
 ):
     """should be able to make a complete work session without a knowned tasks list"""
+    username = get_user_name(user)
+    chat_name = get_chat_name(chat)
 
     # --- \start
     update = mocker.MagicMock(effective_chat=chat, effective_user=user)
     context = mocker.MagicMock()
     bot.start(update, context)
-    check.is_true(bot.wait_start_comment.get(get_user_name(user)))
+    check.is_true(bot.wait_start_comment.get(username))
 
     # --- start comment
     msg = mocker.MagicMock(text="test start")
     update = mocker.MagicMock(effective_chat=chat, effective_user=user, message=msg)
     context = mocker.MagicMock()
     bot.textHandler(update, context)
-    check.is_false(bot.wait_start_comment.get(get_user_name(user)))
-    session = bot.workers_in_chats.get(get_chat_name(chat), {}).get(get_user_name(user))
+    check.is_false(bot.wait_start_comment.get(username))
+    session = bot.workers_in_chats.get(chat_name, {}).get(get_user_name(user))
     check.is_not_none(session)
     if session:
         check.is_none(session.task)
@@ -60,20 +62,23 @@ def test_complete_session_with_tasks(
 ):
     """should be able to make a complete work session with a knowned tasks list"""
 
+    username = get_user_name(user)
+    chat_name = get_chat_name(chat)
+
     # --- Add tasks to db
     tasks = {
         "manger": {"poulet": 1, "pates": 2, "gateau": 3},
         "boire": {"eau": 1.5, "rhum": 7.5},
     }
-    add_tasks(bot.db_path, get_chat_name(chat), tasks)
-    check.equal(get_project_tasks_dict(bot.db_path, get_chat_name(chat)), tasks)
+    add_tasks(bot.db_path, chat_name, tasks)
+    check.equal(get_project_tasks_dict(bot.db_path, chat_name), tasks)
 
     # --- \start
     update = mocker.MagicMock(effective_chat=chat, effective_user=user)
     context = mocker.MagicMock()
     bot.start(update, context)
-    check.is_false(bot.wait_start_comment.get(get_user_name(user)))
-    check.equal(bot.current_tasks_dict.get(get_chat_name(chat)), tasks)
+    check.is_false(bot.wait_start_comment.get(username))
+    check.equal(bot.current_tasks_dict.get(chat_name, {}).get(username), tasks)
 
     # --- Choose "manger" task in querry
     query = mocker.MagicMock(data="manger")
@@ -82,8 +87,10 @@ def test_complete_session_with_tasks(
     )
     context = mocker.MagicMock()
     bot.queryHandler(update, context)
-    check.is_false(bot.wait_start_comment.get(get_user_name(user)))
-    check.equal(bot.current_tasks_dict.get(get_chat_name(chat)), tasks["manger"])
+    check.is_false(bot.wait_start_comment.get(username))
+    check.equal(
+        bot.current_tasks_dict.get(chat_name, {}).get(username), tasks["manger"]
+    )
 
     # --- Choose "poulet" task in querry
     query = mocker.MagicMock(data="poulet")
@@ -92,16 +99,16 @@ def test_complete_session_with_tasks(
     )
     context = mocker.MagicMock()
     bot.queryHandler(update, context)
-    check.is_true(bot.wait_start_comment.get(get_user_name(user)))
-    check.equal(bot.current_tasks_dict.get(get_chat_name(chat)), "poulet")
+    check.is_true(bot.wait_start_comment.get(username))
+    check.equal(bot.current_tasks_dict.get(chat_name, {}).get(username), "poulet")
 
     # --- start comment
     msg = mocker.MagicMock(text="test start")
     update = mocker.MagicMock(effective_chat=chat, effective_user=user, message=msg)
     context = mocker.MagicMock()
     bot.textHandler(update, context)
-    check.is_false(bot.wait_start_comment.get(get_user_name(user)))
-    session = bot.workers_in_chats.get(get_chat_name(chat), {}).get(get_user_name(user))
+    check.is_false(bot.wait_start_comment.get(username))
+    session = bot.workers_in_chats.get(chat_name, {}).get(username)
     check.is_not_none(session)
     if session:
         check.equal(session.task, "poulet")
@@ -111,7 +118,7 @@ def test_complete_session_with_tasks(
     update = mocker.MagicMock(effective_chat=chat, effective_user=user)
     context = mocker.MagicMock()
     bot.stop(update, context)
-    check.is_true(bot.wait_stop_comment.get(get_user_name(user)))
+    check.is_true(bot.wait_stop_comment.get(username))
 
     # --- stop comment
     msg = mocker.MagicMock(text="test stop")
@@ -119,7 +126,7 @@ def test_complete_session_with_tasks(
     context = mocker.MagicMock()
     add_complete_session = mocker.patch("bot.handlers.stop.add_complete_session")
     bot.textHandler(update, context)
-    check.is_false(bot.wait_stop_comment.get(get_user_name(user)))
+    check.is_false(bot.wait_stop_comment.get(username))
     check.is_true(add_complete_session.called)
     if add_complete_session.called:
         complete_session: CompleteSession = add_complete_session.call_args.args[-1]

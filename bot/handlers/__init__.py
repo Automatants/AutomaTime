@@ -37,7 +37,7 @@ class BotHandler:
         self.db_path = db_path
         create_database(db_path)
         self.workers_in_chats: Dict[Chat, Dict[str, Session]] = {}
-        self.current_tasks_dict: Dict[Chat, dict] = {}
+        self.current_tasks_dict: Dict[Chat, Dict[User, dict]] = {}
         self.wait_start_comment: Dict[str, bool] = {}
         self.wait_stop_comment: Dict[str, bool] = {}
         self.wait_tasks: Dict[str, bool] = {}
@@ -49,6 +49,7 @@ class BotHandler:
             update (Update): Incomming update.
             context (CallbackContext): Context of the update.
         """
+        username = get_user_name(update.effective_user)
         chat = get_chat_name(update.effective_chat)
         if chat not in self.workers_in_chats:
             self.workers_in_chats[chat] = {}
@@ -63,7 +64,9 @@ class BotHandler:
             db_path=self.db_path,
         )
         if task_dict:
-            self.current_tasks_dict[chat] = task_dict
+            if chat not in self.current_tasks_dict:
+                self.current_tasks_dict[chat] = {}
+            self.current_tasks_dict[chat][username] = task_dict
 
     def start_session(
         self,
@@ -85,12 +88,7 @@ class BotHandler:
         chat_name = get_chat_name(chat)
         date = message.date
 
-        task = (
-            self.current_tasks_dict[chat_name]
-            if chat_name in self.current_tasks_dict
-            and isinstance(self.current_tasks_dict[chat_name], str)
-            else None
-        )
+        task = self.current_tasks_dict.get(chat_name, {}).get(author)
         session = Session(author, date, message.text, task)
         self.workers_in_chats[chat_name][author] = session
         return session
@@ -161,8 +159,10 @@ class BotHandler:
         if author in self.wait_start_comment and self.wait_start_comment[author]:
             session = self.start_session(user, chat, message)
             self.wait_start_comment[author] = False
-            if chat_name in self.current_tasks_dict:
-                self.current_tasks_dict.pop(chat_name)
+            current_task_dict = self.current_tasks_dict.get(chat_name, {})
+            if author in current_task_dict:
+                self.current_tasks_dict[chat_name].pop(author)
+
             send_session_start(context.bot, chat, message, session)
         if author in self.wait_stop_comment and self.wait_stop_comment[author]:
             self.wait_stop_comment[author] = False
@@ -192,10 +192,12 @@ class BotHandler:
         """
         text: str = update.callback_query.data
         user: User = update.effective_user
+        author = get_user_name(user)
         chat_name = get_chat_name(update.effective_chat)
-        if chat_name in self.current_tasks_dict:
-            chat_tasks = self.current_tasks_dict[chat_name]
-            self.current_tasks_dict[chat_name] = handle_current_tasks_dict(
+        current_tasks_dict = self.current_tasks_dict.get(chat_name, {})
+        if author in current_tasks_dict:
+            chat_tasks = self.current_tasks_dict[chat_name][author]
+            self.current_tasks_dict[chat_name][author] = handle_current_tasks_dict(
                 bot_handler=self,
                 user=user,
                 bot=context.bot,
