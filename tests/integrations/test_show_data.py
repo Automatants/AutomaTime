@@ -11,10 +11,11 @@ from tests import bot, user0, user1, chat
 
 from bot.handlers import BotHandler
 from bot.handlers.utils import get_chat_name, get_user_name
-from bot.handlers.show_data import handle_summary
+from bot.handlers.show_data import handle_summary, plot_gantt
 from bot.database import (
     add_complete_session,
     add_tasks,
+    get_all,
     get_summary,
 )
 
@@ -71,3 +72,8 @@ class TestShowData:
         df = get_summary(self.bot.db_path, self.project)
         for user, time in df.to_numpy():
             check.equal(time, expected_times[user])
+
+    def test_gantt(self):
+        sessions_df = get_all(self.bot.db_path, "sessions")
+        plot_gantt(sessions_df)
+        assert True

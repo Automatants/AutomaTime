@@ -12,7 +12,7 @@ from telegram import (
 
 from telegram.ext import CallbackContext
 
-from bot import ISWORKING, SUMMARY
+from bot import ISWORKING, SUMMARY, TIMELINE
 from bot.dataclasses import Session
 from bot.database import create_database
 from bot.handlers.utils import get_chat_name, get_user_name, try_delete_message
@@ -26,6 +26,7 @@ from bot.handlers.load_tasks import store_task, handle_load_task
 from bot.handlers.show_data import (
     handle_is_working,
     handle_summary,
+    send_gantt,
 )
 
 
@@ -205,6 +206,8 @@ class BotHandler:
             handle_is_working(update, context, self.workers_in_chats)
         elif text.startswith(SUMMARY):
             handle_summary(update, context, self.db_path)
+        elif text == TIMELINE:
+            send_gantt(context.bot, update.effective_chat, self.db_path)
 
     @staticmethod
     def unknown(update: Update, context: CallbackContext):
