@@ -1,6 +1,6 @@
-# AutomaTime
+# Telegram Bot Timer
 
-Repository for the AutomaTime telegram bot
+A telegram bot to manage work times !
 
 ## Installation
 
@@ -13,5 +13,5 @@ pip install -r requirements.txt
 Run the bot:
 
 ```bash
-python -m automatimebot
+python -m bot
 ```

@@ -1,0 +1,7 @@
+pylint
+pytest
+pytest-check
+pytest-mock
+pytest-cov
+hypothesis
+black
