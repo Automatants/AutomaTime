@@ -1,4 +1,4 @@
-# Bycelium Timer
+# Telegram Bot Timer
 
 A telegram bot to manage work times !
 
