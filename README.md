@@ -15,3 +15,9 @@ Run the bot:
 ```bash
 python -m bot
 ```
+
+### Using docker
+
+```bash
+docker-compose up
+```
